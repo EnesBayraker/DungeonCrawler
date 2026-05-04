@@ -1,5 +1,7 @@
 #include <SFML/Graphics.hpp>
 
+#include "Player.h"
+
 int main()
 {
     sf::RenderWindow window(
@@ -9,12 +11,13 @@ int main()
 
     window.setFramerateLimit(60);
 
-    sf::RectangleShape playerShape({32.f, 32.f});
-    playerShape.setFillColor(sf::Color::White);
-    playerShape.setPosition({384.f, 284.f});
+    Player player;
+    sf::Clock clock;
 
     while (window.isOpen())
     {
+        const float deltaTime = clock.restart().asSeconds();
+
         while (const auto event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
@@ -23,8 +26,10 @@ int main()
             }
         }
 
+        player.handleInput(deltaTime);
+
         window.clear(sf::Color::Black);
-        window.draw(playerShape);
+        player.draw(window);
         window.display();
     }
 

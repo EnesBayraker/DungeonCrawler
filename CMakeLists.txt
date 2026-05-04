@@ -19,6 +19,8 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable(DungeonCrawler
         src/main.cpp
+        src/Player.h
+        src/Player.cpp
 )
 
 target_compile_features(DungeonCrawler PRIVATE cxx_std_17)
