@@ -15,6 +15,8 @@ int main()
     Map map;
     Player player;
 
+    player.setGridPosition(map.getPlayerStart());
+
     while (window.isOpen())
     {
         while (const auto event = window.pollEvent())

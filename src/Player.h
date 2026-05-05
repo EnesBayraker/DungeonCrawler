@@ -11,6 +11,7 @@ public:
 
     void handleInput(const sf::Event& event, const Map& map);
     void draw(sf::RenderWindow& window) const;
+    void setGridPosition(const sf::Vector2i& position);
 
 private:
     sf::RectangleShape m_shape;

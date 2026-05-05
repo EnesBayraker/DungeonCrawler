@@ -61,6 +61,12 @@ void Player::updateShapePosition()
     });
 }
 
+void Player::setGridPosition(const sf::Vector2i& position)
+{
+    m_gridPosition = position;
+    updateShapePosition();
+}
+
 void Player::draw(sf::RenderWindow& window) const
 {
     window.draw(m_shape);
