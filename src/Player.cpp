@@ -1,44 +1,64 @@
 #include "Player.h"
 
+#include "Map.h"
+
 Player::Player()
-    : m_speed(220.f)
+    : m_gridPosition(2, 2)
 {
-    // Oyuncuyu beyaz bir kare olarak temsil ediyoruz.
-    m_shape.setSize({32.f, 32.f});
+    // Oyuncu tile içinde biraz küçük çizilir, böylece zemin kenarı görünür.
+    m_shape.setSize({28.f, 28.f});
     m_shape.setFillColor(sf::Color::White);
-    m_shape.setPosition({384.f, 284.f});
+
+    updateShapePosition();
 }
 
-void Player::handleInput(float deltaTime)
+void Player::handleInput(const sf::Event& event, const Map& map)
 {
-    sf::Vector2f movement{0.f, 0.f};
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
 
-    // WASD ve ok tuşları ile hareket.
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
+    if (keyPressed == nullptr)
     {
-        movement.y -= m_speed * deltaTime;
+        return;
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
-    {
-        movement.y += m_speed * deltaTime;
-    }
+    using Scancode = sf::Keyboard::Scancode;
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
+    if (keyPressed->scancode == Scancode::W || keyPressed->scancode == Scancode::Up)
     {
-        movement.x -= m_speed * deltaTime;
+        tryMove({0, -1}, map);
     }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
+    else if (keyPressed->scancode == Scancode::S || keyPressed->scancode == Scancode::Down)
     {
-        movement.x += m_speed * deltaTime;
+        tryMove({0, 1}, map);
     }
+    else if (keyPressed->scancode == Scancode::A || keyPressed->scancode == Scancode::Left)
+    {
+        tryMove({-1, 0}, map);
+    }
+    else if (keyPressed->scancode == Scancode::D || keyPressed->scancode == Scancode::Right)
+    {
+        tryMove({1, 0}, map);
+    }
+}
 
-    m_shape.move(movement);
+void Player::tryMove(const sf::Vector2i& direction, const Map& map)
+{
+    const sf::Vector2i targetPosition = m_gridPosition + direction;
+
+    // Hedef tile yürünebilirse oyuncuyu oraya taşıyorum
+    if (map.isWalkable(targetPosition.x, targetPosition.y))
+    {
+        m_gridPosition = targetPosition;
+        updateShapePosition();
+    }
+}
+
+void Player::updateShapePosition()
+{
+    m_shape.setPosition({
+        static_cast<float>(m_gridPosition.x * Map::TileSize + 2),
+        static_cast<float>(m_gridPosition.y * Map::TileSize + 2)
+    });
 }
 
 void Player::draw(sf::RenderWindow& window) const

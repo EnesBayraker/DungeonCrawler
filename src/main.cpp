@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 
+#include "Map.h"
 #include "Player.h"
 
 int main()
@@ -11,25 +12,26 @@ int main()
 
     window.setFramerateLimit(60);
 
+    Map map;
     Player player;
-    sf::Clock clock;
 
     while (window.isOpen())
     {
-        const float deltaTime = clock.restart().asSeconds();
-
         while (const auto event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
             {
                 window.close();
             }
+
+            player.handleInput(*event, map);
         }
 
-        player.handleInput(deltaTime);
-
         window.clear(sf::Color::Black);
+
+        map.draw(window);
         player.draw(window);
+
         window.display();
     }
 

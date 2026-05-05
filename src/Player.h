@@ -2,15 +2,20 @@
 
 #include <SFML/Graphics.hpp>
 
+class Map;
+
 class Player
 {
 public:
     Player();
 
-    void handleInput(float deltaTime);
+    void handleInput(const sf::Event& event, const Map& map);
     void draw(sf::RenderWindow& window) const;
 
 private:
     sf::RectangleShape m_shape;
-    float m_speed;
+    sf::Vector2i m_gridPosition;
+
+    void tryMove(const sf::Vector2i& direction, const Map& map);
+    void updateShapePosition();
 };
