@@ -1,5 +1,6 @@
 #include "Map.h"
 
+#include <algorithm>
 
 sf::Vector2i Room::getCenter() const
 {
@@ -31,12 +32,13 @@ void Map::generateBspMap()
     };
 
     splitArea(rootArea, 0);
+    connectRooms();
 
     if (!m_rooms.empty())
     {
-        // Şimdilik oyuncuyu ilk odanın merkezine koyacağız.
-        // Rastgele oda spawn mantığı Gün 5'te gelecek.
-        m_playerStart = m_rooms.front().getCenter();
+        // Oyuncuyu rastgele bir odanın merkezinde başlatıyoruz.
+        const int roomIndex = randomInt(0, static_cast<int>(m_rooms.size()) - 1);
+        m_playerStart = m_rooms[roomIndex].getCenter();
     }
 }
 
@@ -146,11 +148,65 @@ void Map::carveRoom(const Room& room)
     {
         for (int x = room.x; x < room.x + room.width; ++x)
         {
-            if (x >= 0 && x < Width && y >= 0 && y < Height)
-            {
-                m_tiles[y][x] = TileType::Floor;
-            }
+            setFloor(x, y);
         }
+    }
+}
+
+void Map::connectRooms()
+{
+    if (m_rooms.size() < 2)
+    {
+        return;
+    }
+
+    for (std::size_t i = 1; i < m_rooms.size(); ++i)
+    {
+        const sf::Vector2i previousCenter = m_rooms[i - 1].getCenter();
+        const sf::Vector2i currentCenter = m_rooms[i].getCenter();
+
+        // Koridorun yönünü rastgele seçiyoruz.
+        // Böylece harita her çalıştırmada daha farklı görünür.
+        if (randomInt(0, 1) == 0)
+        {
+            carveHorizontalCorridor(previousCenter.x, currentCenter.x, previousCenter.y);
+            carveVerticalCorridor(previousCenter.y, currentCenter.y, currentCenter.x);
+        }
+        else
+        {
+            carveVerticalCorridor(previousCenter.y, currentCenter.y, previousCenter.x);
+            carveHorizontalCorridor(previousCenter.x, currentCenter.x, currentCenter.y);
+        }
+    }
+}
+
+void Map::carveHorizontalCorridor(int x1, int x2, int y)
+{
+    const int startX = std::min(x1, x2);
+    const int endX = std::max(x1, x2);
+
+    for (int x = startX; x <= endX; ++x)
+    {
+        setFloor(x, y);
+    }
+}
+
+void Map::carveVerticalCorridor(int y1, int y2, int x)
+{
+    const int startY = std::min(y1, y2);
+    const int endY = std::max(y1, y2);
+
+    for (int y = startY; y <= endY; ++y)
+    {
+        setFloor(x, y);
+    }
+}
+
+void Map::setFloor(int x, int y)
+{
+    if (x >= 0 && x < Width && y >= 0 && y < Height)
+    {
+        m_tiles[y][x] = TileType::Floor;
     }
 }
 

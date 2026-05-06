@@ -52,5 +52,10 @@ private:
     void createRoomInArea(const Area& area);
     void carveRoom(const Room& room);
 
+    void connectRooms();
+    void carveHorizontalCorridor(int x1, int x2, int y);
+    void carveVerticalCorridor(int y1, int y2, int x);
+    void setFloor(int x, int y);
+
     int randomInt(int min, int max);
 };
