@@ -29,6 +29,8 @@ int main()
             player.handleInput(*event, map);
         }
 
+        map.computeFov(player.getGridPosition(), 6);
+
         window.clear(sf::Color::Black);
 
         map.draw(window);

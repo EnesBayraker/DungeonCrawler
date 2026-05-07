@@ -31,6 +31,10 @@ public:
 
     void draw(sf::RenderWindow& window) const;
     bool isWalkable(int x, int y) const;
+    bool isVisible(int x, int y) const;
+
+    void computeFov(const sf::Vector2i& origin, int radius);
+
     sf::Vector2i getPlayerStart() const;
 
 private:
@@ -43,7 +47,9 @@ private:
     };
 
     std::vector<std::vector<TileType>> m_tiles;
+    std::vector<std::vector<bool>> m_visible;
     std::vector<Room> m_rooms;
+
     sf::Vector2i m_playerStart;
     std::mt19937 m_randomEngine;
 
@@ -56,6 +62,10 @@ private:
     void carveHorizontalCorridor(int x1, int x2, int y);
     void carveVerticalCorridor(int y1, int y2, int x);
     void setFloor(int x, int y);
+
+    bool isInsideMap(int x, int y) const;
+    bool isTransparent(int x, int y) const;
+    bool hasLineOfSight(const sf::Vector2i& origin, const sf::Vector2i& target) const;
 
     int randomInt(int min, int max);
 };

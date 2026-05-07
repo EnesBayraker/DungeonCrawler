@@ -1,6 +1,7 @@
 #include "Map.h"
 
 #include <algorithm>
+#include <cstdlib>
 
 sf::Vector2i Room::getCenter() const
 {
@@ -21,6 +22,7 @@ void Map::generateBspMap()
 {
     // Haritayı başta tamamen duvar yapıyoruz.
     m_tiles.assign(Height, std::vector<TileType>(Width, TileType::Wall));
+    m_visible.assign(Height, std::vector<bool>(Width, false));
     m_rooms.clear();
 
     // Dış sınırları korumak için BSP alanını bir tile içeriden başlatıyoruz.
@@ -166,7 +168,6 @@ void Map::connectRooms()
         const sf::Vector2i currentCenter = m_rooms[i].getCenter();
 
         // Koridorun yönünü rastgele seçiyoruz.
-        // Böylece harita her çalıştırmada daha farklı görünür.
         if (randomInt(0, 1) == 0)
         {
             carveHorizontalCorridor(previousCenter.x, currentCenter.x, previousCenter.y);
@@ -204,9 +205,99 @@ void Map::carveVerticalCorridor(int y1, int y2, int x)
 
 void Map::setFloor(int x, int y)
 {
-    if (x >= 0 && x < Width && y >= 0 && y < Height)
+    if (isInsideMap(x, y))
     {
         m_tiles[y][x] = TileType::Floor;
+    }
+}
+
+bool Map::isInsideMap(int x, int y) const
+{
+    return x >= 0 && x < Width && y >= 0 && y < Height;
+}
+
+bool Map::isTransparent(int x, int y) const
+{
+    if (!isInsideMap(x, y))
+    {
+        return false;
+    }
+
+    return m_tiles[y][x] == TileType::Floor;
+}
+
+bool Map::hasLineOfSight(const sf::Vector2i& origin, const sf::Vector2i& target) const
+{
+    int x0 = origin.x;
+    int y0 = origin.y;
+    const int x1 = target.x;
+    const int y1 = target.y;
+
+    const int dx = std::abs(x1 - x0);
+    const int sx = x0 < x1 ? 1 : -1;
+
+    const int dy = -std::abs(y1 - y0);
+    const int sy = y0 < y1 ? 1 : -1;
+
+    int error = dx + dy;
+
+    while (true)
+    {
+        if (x0 == x1 && y0 == y1)
+        {
+            return true;
+        }
+
+        // Başlangıç tile'ı hariç, aradaki duvarlar görüşü keser.
+        if (!(x0 == origin.x && y0 == origin.y) && !isTransparent(x0, y0))
+        {
+            return false;
+        }
+
+        const int error2 = 2 * error;
+
+        if (error2 >= dy)
+        {
+            error += dy;
+            x0 += sx;
+        }
+
+        if (error2 <= dx)
+        {
+            error += dx;
+            y0 += sy;
+        }
+    }
+}
+
+void Map::computeFov(const sf::Vector2i& origin, int radius)
+{
+    m_visible.assign(Height, std::vector<bool>(Width, false));
+
+    const int radiusSquared = radius * radius;
+
+    for (int y = origin.y - radius; y <= origin.y + radius; ++y)
+    {
+        for (int x = origin.x - radius; x <= origin.x + radius; ++x)
+        {
+            if (!isInsideMap(x, y))
+            {
+                continue;
+            }
+
+            const int dx = x - origin.x;
+            const int dy = y - origin.y;
+
+            if (dx * dx + dy * dy > radiusSquared)
+            {
+                continue;
+            }
+
+            if (hasLineOfSight(origin, {x, y}))
+            {
+                m_visible[y][x] = true;
+            }
+        }
     }
 }
 
@@ -223,12 +314,22 @@ int Map::randomInt(int min, int max)
 
 bool Map::isWalkable(int x, int y) const
 {
-    if (x < 0 || x >= Width || y < 0 || y >= Height)
+    if (!isInsideMap(x, y))
     {
         return false;
     }
 
     return m_tiles[y][x] == TileType::Floor;
+}
+
+bool Map::isVisible(int x, int y) const
+{
+    if (!isInsideMap(x, y))
+    {
+        return false;
+    }
+
+    return m_visible[y][x];
 }
 
 sf::Vector2i Map::getPlayerStart() const
@@ -242,9 +343,7 @@ void Map::draw(sf::RenderWindow& window) const
         sf::Vector2f(static_cast<float>(TileSize), static_cast<float>(TileSize))
     );
 
-    // Tile sınırlarını hafif belli etmek için ince çizgi ekliyoruz.
     tileShape.setOutlineThickness(1.f);
-    tileShape.setOutlineColor(sf::Color(20, 20, 20));
 
     for (int y = 0; y < Height; ++y)
     {
@@ -254,6 +353,16 @@ void Map::draw(sf::RenderWindow& window) const
                 static_cast<float>(x * TileSize),
                 static_cast<float>(y * TileSize)
             });
+
+            // FOV hesabını test edebilmek için görünür tile'ların çizgisi daha açık.
+            if (m_visible[y][x])
+            {
+                tileShape.setOutlineColor(sf::Color(120, 120, 120));
+            }
+            else
+            {
+                tileShape.setOutlineColor(sf::Color(20, 20, 20));
+            }
 
             if (m_tiles[y][x] == TileType::Wall)
             {
