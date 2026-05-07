@@ -48,6 +48,7 @@ private:
 
     std::vector<std::vector<TileType>> m_tiles;
     std::vector<std::vector<bool>> m_visible;
+    std::vector<std::vector<bool>> m_explored;
     std::vector<Room> m_rooms;
 
     sf::Vector2i m_playerStart;

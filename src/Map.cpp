@@ -23,6 +23,7 @@ void Map::generateBspMap()
     // Haritayı başta tamamen duvar yapıyoruz.
     m_tiles.assign(Height, std::vector<TileType>(Width, TileType::Wall));
     m_visible.assign(Height, std::vector<bool>(Width, false));
+    m_explored.assign(Height, std::vector<bool>(Width, false));
     m_rooms.clear();
 
     // Dış sınırları korumak için BSP alanını bir tile içeriden başlatıyoruz.
@@ -296,6 +297,9 @@ void Map::computeFov(const sf::Vector2i& origin, int radius)
             if (hasLineOfSight(origin, {x, y}))
             {
                 m_visible[y][x] = true;
+
+                // Bir tile bir kere görünürse artık keşfedilmiş sayılır.
+                m_explored[y][x] = true;
             }
         }
     }
@@ -354,23 +358,42 @@ void Map::draw(sf::RenderWindow& window) const
                 static_cast<float>(y * TileSize)
             });
 
-            // FOV hesabını test edebilmek için görünür tile'ların çizgisi daha açık.
-            if (m_visible[y][x])
-            {
-                tileShape.setOutlineColor(sf::Color(120, 120, 120));
-            }
-            else
-            {
-                tileShape.setOutlineColor(sf::Color(20, 20, 20));
-            }
+            const bool visible = m_visible[y][x];
+            const bool explored = m_explored[y][x];
 
-            if (m_tiles[y][x] == TileType::Wall)
+            if (!explored)
             {
-                tileShape.setFillColor(sf::Color(95, 95, 95));
+                // Hiç görülmemiş alan tamamen karanlık.
+                tileShape.setFillColor(sf::Color::Black);
+                tileShape.setOutlineColor(sf::Color::Black);
+            }
+            else if (!visible)
+            {
+                // Daha önce görülmüş ama şu an görüş dışında olan alan.
+                tileShape.setOutlineColor(sf::Color(10, 10, 10));
+
+                if (m_tiles[y][x] == TileType::Wall)
+                {
+                    tileShape.setFillColor(sf::Color(35, 35, 35));
+                }
+                else
+                {
+                    tileShape.setFillColor(sf::Color(20, 20, 20));
+                }
             }
             else
             {
-                tileShape.setFillColor(sf::Color(55, 55, 55));
+                // Şu an aktif olarak görülen alan.
+                tileShape.setOutlineColor(sf::Color(45, 45, 45));
+
+                if (m_tiles[y][x] == TileType::Wall)
+                {
+                    tileShape.setFillColor(sf::Color(110, 110, 110));
+                }
+                else
+                {
+                    tileShape.setFillColor(sf::Color(65, 65, 65));
+                }
             }
 
             window.draw(tileShape);
