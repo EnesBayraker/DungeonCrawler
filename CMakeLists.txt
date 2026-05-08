@@ -21,6 +21,10 @@ add_executable(DungeonCrawler
         src/main.cpp
         src/Player.cpp
         src/Map.cpp
+        src/Entity.h
+        src/Entity.cpp
+        src/Enemy.h
+        src/Enemy.cpp
 )
 
 target_compile_features(DungeonCrawler PRIVATE cxx_std_17)

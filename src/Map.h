@@ -36,6 +36,7 @@ public:
     void computeFov(const sf::Vector2i& origin, int radius);
 
     sf::Vector2i getPlayerStart() const;
+    const std::vector<Room>& getRooms() const;
 
 private:
     struct Area

@@ -341,6 +341,11 @@ sf::Vector2i Map::getPlayerStart() const
     return m_playerStart;
 }
 
+const std::vector<Room>& Map::getRooms() const
+{
+    return m_rooms;
+}
+
 void Map::draw(sf::RenderWindow& window) const
 {
     sf::RectangleShape tileShape(
