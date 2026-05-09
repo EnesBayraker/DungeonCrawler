@@ -11,8 +11,8 @@ class Player : public Entity
 public:
     Player();
 
-    void handleInput(const sf::Event& event, const Map& map);
+    bool handleInput(const sf::Event& event, const Map& map);
 
 private:
-    void tryMove(const sf::Vector2i& direction, const Map& map);
+    bool tryMove(const sf::Vector2i& direction, const Map& map);
 };

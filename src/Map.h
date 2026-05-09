@@ -32,6 +32,8 @@ public:
     void draw(sf::RenderWindow& window) const;
     bool isWalkable(int x, int y) const;
     bool isVisible(int x, int y) const;
+    bool canSee(const sf::Vector2i& origin, const sf::Vector2i& target, int radius) const;
+
 
     void computeFov(const sf::Vector2i& origin, int radius);
 

@@ -1,5 +1,7 @@
 #include <SFML/Graphics.hpp>
 
+#include <cstddef>
+#include <cstdlib>
 #include <random>
 #include <vector>
 
@@ -11,6 +13,11 @@ int randomInt(std::mt19937& randomEngine, int min, int max)
 {
     std::uniform_int_distribution<int> distribution(min, max);
     return distribution(randomEngine);
+}
+
+int getManhattanDistance(const sf::Vector2i& first, const sf::Vector2i& second)
+{
+    return std::abs(first.x - second.x) + std::abs(first.y - second.y);
 }
 
 std::vector<Enemy> createEnemies(const Map& map, const sf::Vector2i& playerPosition)
@@ -44,6 +51,79 @@ std::vector<Enemy> createEnemies(const Map& map, const sf::Vector2i& playerPosit
     return enemies;
 }
 
+std::vector<sf::Vector2i> collectEnemyPositions(
+    const std::vector<Enemy>& enemies,
+    std::size_t ignoredIndex
+)
+{
+    std::vector<sf::Vector2i> positions;
+
+    for (std::size_t i = 0; i < enemies.size(); ++i)
+    {
+        if (i == ignoredIndex)
+        {
+            continue;
+        }
+
+        positions.push_back(enemies[i].getGridPosition());
+    }
+
+    return positions;
+}
+
+std::vector<bool> calculateGroupAlertStates(
+    const std::vector<Enemy>& enemies,
+    const Map& map,
+    const sf::Vector2i& playerPosition
+)
+{
+    constexpr int EnemySightRadius = 6;
+    constexpr int GroupAlertRadius = 5;
+
+    std::vector<bool> forceChase(enemies.size(), false);
+
+    for (std::size_t i = 0; i < enemies.size(); ++i)
+    {
+        const sf::Vector2i observerPosition = enemies[i].getGridPosition();
+
+        if (!map.canSee(observerPosition, playerPosition, EnemySightRadius))
+        {
+            continue;
+        }
+
+        // Oyuncuyu gören düşman, yakınındaki diğer düşmanları da alarma geçirir.
+        for (std::size_t j = 0; j < enemies.size(); ++j)
+        {
+            const sf::Vector2i allyPosition = enemies[j].getGridPosition();
+
+            if (getManhattanDistance(observerPosition, allyPosition) <= GroupAlertRadius)
+            {
+                forceChase[j] = true;
+            }
+        }
+    }
+
+    return forceChase;
+}
+
+void updateEnemies(std::vector<Enemy>& enemies, const Map& map, const Player& player)
+{
+    const sf::Vector2i playerPosition = player.getGridPosition();
+    const std::vector<bool> forceChase = calculateGroupAlertStates(enemies, map, playerPosition);
+
+    for (std::size_t i = 0; i < enemies.size(); ++i)
+    {
+        const std::vector<sf::Vector2i> occupiedPositions = collectEnemyPositions(enemies, i);
+
+        enemies[i].updateAI(
+            map,
+            playerPosition,
+            occupiedPositions,
+            forceChase[i]
+        );
+    }
+}
+
 int main()
 {
     sf::RenderWindow window(
@@ -52,6 +132,7 @@ int main()
     );
 
     window.setFramerateLimit(60);
+    window.setKeyRepeatEnabled(false);
 
     Map map;
     Player player;
@@ -62,6 +143,8 @@ int main()
 
     while (window.isOpen())
     {
+        bool playerTookTurn = false;
+
         while (const auto event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
@@ -69,7 +152,15 @@ int main()
                 window.close();
             }
 
-            player.handleInput(*event, map);
+            if (player.handleInput(*event, map))
+            {
+                playerTookTurn = true;
+            }
+        }
+
+        if (playerTookTurn)
+        {
+            updateEnemies(enemies, map, player);
         }
 
         map.computeFov(player.getGridPosition(), 6);

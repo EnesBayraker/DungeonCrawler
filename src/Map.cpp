@@ -336,6 +336,25 @@ bool Map::isVisible(int x, int y) const
     return m_visible[y][x];
 }
 
+bool Map::canSee(const sf::Vector2i& origin, const sf::Vector2i& target, int radius) const
+{
+    if (!isInsideMap(origin.x, origin.y) || !isInsideMap(target.x, target.y))
+    {
+        return false;
+    }
+
+    const int dx = target.x - origin.x;
+    const int dy = target.y - origin.y;
+    const int radiusSquared = radius * radius;
+
+    if (dx * dx + dy * dy > radiusSquared)
+    {
+        return false;
+    }
+
+    return hasLineOfSight(origin, target);
+}
+
 sf::Vector2i Map::getPlayerStart() const
 {
     return m_playerStart;
