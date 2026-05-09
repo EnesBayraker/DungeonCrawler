@@ -5,6 +5,7 @@
 #include <cstdlib>
 
 #include "Map.h"
+#include "Player.h"
 
 Enemy::Enemy(const sf::Vector2i& gridPosition)
     : Entity(gridPosition, 10, 3, sf::Color::Red),
@@ -15,11 +16,20 @@ Enemy::Enemy(const sf::Vector2i& gridPosition)
 
 void Enemy::updateAI(
     const Map& map,
-    const sf::Vector2i& playerPosition,
+    Player& player,
     const std::vector<sf::Vector2i>& occupiedPositions,
     bool forceChase
 )
 {
+    const sf::Vector2i playerPosition = player.getGridPosition();
+
+    if (isAdjacentToPlayer(playerPosition))
+    {
+        // Oyuncuya bitişikse hareket etmek yerine saldırır.
+        player.takeDamage(m_damage);
+        return;
+    }
+
     const bool canSeePlayer = map.canSee(m_gridPosition, playerPosition, SightRadius);
 
     if (canSeePlayer || forceChase)
@@ -60,8 +70,6 @@ sf::Vector2i Enemy::chooseChaseDirection(const sf::Vector2i& playerPosition) con
     const int dx = playerPosition.x - m_gridPosition.x;
     const int dy = playerPosition.y - m_gridPosition.y;
 
-    // Oyuncuya bitişikse şimdilik hareket etmiyor.
-    // Gün 10'da burada saldırı mantığı devreye girecek.
     if (std::abs(dx) + std::abs(dy) <= 1)
     {
         return {0, 0};
@@ -93,6 +101,15 @@ sf::Vector2i Enemy::chooseWanderDirection()
     std::shuffle(directions.begin(), directions.end(), m_randomEngine);
 
     return directions.front();
+}
+
+bool Enemy::isAdjacentToPlayer(const sf::Vector2i& playerPosition) const
+{
+    const int distance =
+        std::abs(playerPosition.x - m_gridPosition.x) +
+        std::abs(playerPosition.y - m_gridPosition.y);
+
+    return distance == 1;
 }
 
 bool Enemy::canMoveTo(

@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <random>
@@ -41,7 +42,6 @@ std::vector<Enemy> createEnemies(const Map& map, const sf::Vector2i& playerPosit
             continue;
         }
 
-        // Her uygun odaya düşman koymuyoruz; biraz rastgelelik bırakıyoruz.
         if (randomInt(randomEngine, 0, 100) < 60)
         {
             enemies.emplace_back(spawnPosition);
@@ -49,6 +49,21 @@ std::vector<Enemy> createEnemies(const Map& map, const sf::Vector2i& playerPosit
     }
 
     return enemies;
+}
+
+void removeDeadEnemies(std::vector<Enemy>& enemies)
+{
+    enemies.erase(
+        std::remove_if(
+            enemies.begin(),
+            enemies.end(),
+            [](const Enemy& enemy)
+            {
+                return !enemy.isAlive();
+            }
+        ),
+        enemies.end()
+    );
 }
 
 std::vector<sf::Vector2i> collectEnemyPositions(
@@ -106,7 +121,7 @@ std::vector<bool> calculateGroupAlertStates(
     return forceChase;
 }
 
-void updateEnemies(std::vector<Enemy>& enemies, const Map& map, const Player& player)
+void updateEnemies(std::vector<Enemy>& enemies, const Map& map, Player& player)
 {
     const sf::Vector2i playerPosition = player.getGridPosition();
     const std::vector<bool> forceChase = calculateGroupAlertStates(enemies, map, playerPosition);
@@ -117,7 +132,7 @@ void updateEnemies(std::vector<Enemy>& enemies, const Map& map, const Player& pl
 
         enemies[i].updateAI(
             map,
-            playerPosition,
+            player,
             occupiedPositions,
             forceChase[i]
         );
@@ -152,7 +167,7 @@ int main()
                 window.close();
             }
 
-            if (player.handleInput(*event, map))
+            if (player.handleInput(*event, map, enemies))
             {
                 playerTookTurn = true;
             }
@@ -160,7 +175,9 @@ int main()
 
         if (playerTookTurn)
         {
+            removeDeadEnemies(enemies);
             updateEnemies(enemies, map, player);
+            removeDeadEnemies(enemies);
         }
 
         map.computeFov(player.getGridPosition(), 6);
@@ -173,7 +190,6 @@ int main()
         {
             const sf::Vector2i enemyPosition = enemy.getGridPosition();
 
-            // Fog of War nedeniyle sadece görünen düşmanları çiziyoruz.
             if (map.isVisible(enemyPosition.x, enemyPosition.y))
             {
                 enemy.draw(window);

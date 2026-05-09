@@ -6,6 +6,7 @@
 #include "Entity.h"
 
 class Map;
+class Player;
 
 enum class EnemyState
 {
@@ -20,7 +21,7 @@ public:
 
     void updateAI(
         const Map& map,
-        const sf::Vector2i& playerPosition,
+        Player& player,
         const std::vector<sf::Vector2i>& occupiedPositions,
         bool forceChase
     );
@@ -35,6 +36,8 @@ private:
 
     sf::Vector2i chooseChaseDirection(const sf::Vector2i& playerPosition) const;
     sf::Vector2i chooseWanderDirection();
+
+    bool isAdjacentToPlayer(const sf::Vector2i& playerPosition) const;
 
     bool canMoveTo(
         const sf::Vector2i& targetPosition,
