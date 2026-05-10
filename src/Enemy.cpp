@@ -3,12 +3,15 @@
 #include <algorithm>
 #include <array>
 #include <cstdlib>
+#include <string>
 
 #include "Map.h"
+#include "MessageLog.h"
 #include "Player.h"
 
 Enemy::Enemy(const sf::Vector2i& gridPosition)
     : Entity(gridPosition, 10, 3, sf::Color::Red),
+      m_name("Goblin"),
       m_state(EnemyState::Wander),
       m_randomEngine(std::random_device{}())
 {
@@ -18,7 +21,8 @@ void Enemy::updateAI(
     const Map& map,
     Player& player,
     const std::vector<sf::Vector2i>& occupiedPositions,
-    bool forceChase
+    bool forceChase,
+    MessageLog& messageLog
 )
 {
     const sf::Vector2i playerPosition = player.getGridPosition();
@@ -27,6 +31,16 @@ void Enemy::updateAI(
     {
         // Oyuncuya bitişikse hareket etmek yerine saldırır.
         player.takeDamage(m_damage);
+
+        messageLog.add(
+            m_name + " hits you for " + std::to_string(m_damage) + " damage."
+        );
+
+        if (!player.isAlive())
+        {
+            messageLog.add("You are defeated.");
+        }
+
         return;
     }
 
@@ -63,6 +77,11 @@ void Enemy::updateAI(
 EnemyState Enemy::getState() const
 {
     return m_state;
+}
+
+const std::string& Enemy::getName() const
+{
+    return m_name;
 }
 
 sf::Vector2i Enemy::chooseChaseDirection(const sf::Vector2i& playerPosition) const

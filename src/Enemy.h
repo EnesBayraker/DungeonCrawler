@@ -1,11 +1,13 @@
 #pragma once
 
 #include <random>
+#include <string>
 #include <vector>
 
 #include "Entity.h"
 
 class Map;
+class MessageLog;
 class Player;
 
 enum class EnemyState
@@ -23,14 +25,17 @@ public:
         const Map& map,
         Player& player,
         const std::vector<sf::Vector2i>& occupiedPositions,
-        bool forceChase
+        bool forceChase,
+        MessageLog& messageLog
     );
 
     EnemyState getState() const;
+    const std::string& getName() const;
 
 private:
     static constexpr int SightRadius = 6;
 
+    std::string m_name;
     EnemyState m_state;
     std::mt19937 m_randomEngine;
 

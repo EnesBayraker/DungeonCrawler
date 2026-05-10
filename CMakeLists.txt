@@ -25,6 +25,10 @@ add_executable(DungeonCrawler
         src/Entity.cpp
         src/Enemy.h
         src/Enemy.cpp
+        src/MessageLog.h
+        src/MessageLog.cpp
+        src/GameUI.h
+        src/GameUI.cpp
 )
 
 target_compile_features(DungeonCrawler PRIVATE cxx_std_17)

@@ -7,7 +7,9 @@
 #include <vector>
 
 #include "Enemy.h"
+#include "GameUI.h"
 #include "Map.h"
+#include "MessageLog.h"
 #include "Player.h"
 
 int randomInt(std::mt19937& randomEngine, int min, int max)
@@ -121,20 +123,31 @@ std::vector<bool> calculateGroupAlertStates(
     return forceChase;
 }
 
-void updateEnemies(std::vector<Enemy>& enemies, const Map& map, Player& player)
+void updateEnemies(
+    std::vector<Enemy>& enemies,
+    const Map& map,
+    Player& player,
+    MessageLog& messageLog
+)
 {
     const sf::Vector2i playerPosition = player.getGridPosition();
     const std::vector<bool> forceChase = calculateGroupAlertStates(enemies, map, playerPosition);
 
     for (std::size_t i = 0; i < enemies.size(); ++i)
     {
+        if (!player.isAlive())
+        {
+            return;
+        }
+
         const std::vector<sf::Vector2i> occupiedPositions = collectEnemyPositions(enemies, i);
 
         enemies[i].updateAI(
             map,
             player,
             occupiedPositions,
-            forceChase[i]
+            forceChase[i],
+            messageLog
         );
     }
 }
@@ -142,7 +155,7 @@ void updateEnemies(std::vector<Enemy>& enemies, const Map& map, Player& player)
 int main()
 {
     sf::RenderWindow window(
-        sf::VideoMode({800, 600}),
+        sf::VideoMode({800, 720}),
         "Roguelike Dungeon Crawler"
     );
 
@@ -151,10 +164,14 @@ int main()
 
     Map map;
     Player player;
+    MessageLog messageLog;
+    GameUI gameUI;
 
     player.setGridPosition(map.getPlayerStart());
 
     std::vector<Enemy> enemies = createEnemies(map, player.getGridPosition());
+
+    messageLog.add("Welcome to the dungeon.");
 
     while (window.isOpen())
     {
@@ -167,16 +184,19 @@ int main()
                 window.close();
             }
 
-            if (player.handleInput(*event, map, enemies))
+            if (
+                player.isAlive() &&
+                player.handleInput(*event, map, enemies, messageLog)
+            )
             {
                 playerTookTurn = true;
             }
         }
 
-        if (playerTookTurn)
+        if (playerTookTurn && player.isAlive())
         {
             removeDeadEnemies(enemies);
-            updateEnemies(enemies, map, player);
+            updateEnemies(enemies, map, player, messageLog);
             removeDeadEnemies(enemies);
         }
 
@@ -197,6 +217,7 @@ int main()
         }
 
         player.draw(window);
+        gameUI.draw(window, player, messageLog);
 
         window.display();
     }

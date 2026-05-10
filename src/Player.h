@@ -8,18 +8,25 @@
 
 class Enemy;
 class Map;
+class MessageLog;
 
 class Player : public Entity
 {
 public:
     Player();
 
-    bool handleInput(const sf::Event& event, const Map& map, std::vector<Enemy>& enemies);
+    bool handleInput(
+        const sf::Event& event,
+        const Map& map,
+        std::vector<Enemy>& enemies,
+        MessageLog& messageLog
+    );
 
 private:
     bool tryMoveOrAttack(
         const sf::Vector2i& direction,
         const Map& map,
-        std::vector<Enemy>& enemies
+        std::vector<Enemy>& enemies,
+        MessageLog& messageLog
     );
 };
