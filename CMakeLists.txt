@@ -29,6 +29,8 @@ add_executable(DungeonCrawler
         src/MessageLog.cpp
         src/GameUI.h
         src/GameUI.cpp
+        src/Item.h
+        src/Item.cpp
 )
 
 target_compile_features(DungeonCrawler PRIVATE cxx_std_17)

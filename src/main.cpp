@@ -8,6 +8,7 @@
 
 #include "Enemy.h"
 #include "GameUI.h"
+#include "Item.h"
 #include "Map.h"
 #include "MessageLog.h"
 #include "Player.h"
@@ -21,6 +22,49 @@ int randomInt(std::mt19937& randomEngine, int min, int max)
 int getManhattanDistance(const sf::Vector2i& first, const sf::Vector2i& second)
 {
     return std::abs(first.x - second.x) + std::abs(first.y - second.y);
+}
+
+bool isEnemyAtPosition(const std::vector<Enemy>& enemies, const sf::Vector2i& position)
+{
+    for (const Enemy& enemy : enemies)
+    {
+        if (enemy.isAlive() && enemy.getGridPosition() == position)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool isItemAtPosition(const std::vector<Item>& items, const sf::Vector2i& position)
+{
+    for (const Item& item : items)
+    {
+        if (item.getGridPosition() == position)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+ItemType getRandomItemType(std::mt19937& randomEngine)
+{
+    const int roll = randomInt(randomEngine, 0, 2);
+
+    if (roll == 0)
+    {
+        return ItemType::Potion;
+    }
+
+    if (roll == 1)
+    {
+        return ItemType::Weapon;
+    }
+
+    return ItemType::Armor;
 }
 
 std::vector<Enemy> createEnemies(const Map& map, const sf::Vector2i& playerPosition)
@@ -51,6 +95,84 @@ std::vector<Enemy> createEnemies(const Map& map, const sf::Vector2i& playerPosit
     }
 
     return enemies;
+}
+
+std::vector<Item> createItems(
+    const Map& map,
+    const sf::Vector2i& playerPosition,
+    const std::vector<Enemy>& enemies
+)
+{
+    std::vector<Item> items;
+    std::mt19937 randomEngine(std::random_device{}());
+
+    constexpr int MaxItemCount = 8;
+
+    for (const Room& room : map.getRooms())
+    {
+        if (static_cast<int>(items.size()) >= MaxItemCount)
+        {
+            break;
+        }
+
+        // Her odada item olmak zorunda değil.
+        if (randomInt(randomEngine, 0, 100) > 65)
+        {
+            continue;
+        }
+
+        const sf::Vector2i itemPosition{
+            randomInt(randomEngine, room.x, room.x + room.width - 1),
+            randomInt(randomEngine, room.y, room.y + room.height - 1)
+        };
+
+        if (itemPosition == playerPosition)
+        {
+            continue;
+        }
+
+        if (isEnemyAtPosition(enemies, itemPosition))
+        {
+            continue;
+        }
+
+        if (isItemAtPosition(items, itemPosition))
+        {
+            continue;
+        }
+
+        items.emplace_back(getRandomItemType(randomEngine), itemPosition);
+    }
+
+    return items;
+}
+
+void tryPickupItem(
+    std::vector<Item>& items,
+    const Player& player,
+    MessageLog& messageLog
+)
+{
+    const sf::Vector2i playerPosition = player.getGridPosition();
+
+    auto itemIt = std::find_if(
+        items.begin(),
+        items.end(),
+        [playerPosition](const Item& item)
+        {
+            return item.getGridPosition() == playerPosition;
+        }
+    );
+
+    if (itemIt == items.end())
+    {
+        return;
+    }
+
+    messageLog.add("You picked up " + itemIt->getName() + ".");
+
+    // Envanter sonradan eklenecek
+    items.erase(itemIt);
 }
 
 void removeDeadEnemies(std::vector<Enemy>& enemies)
@@ -170,6 +292,7 @@ int main()
     player.setGridPosition(map.getPlayerStart());
 
     std::vector<Enemy> enemies = createEnemies(map, player.getGridPosition());
+    std::vector<Item> items = createItems(map, player.getGridPosition(), enemies);
 
     messageLog.add("Welcome to the dungeon.");
 
@@ -195,6 +318,8 @@ int main()
 
         if (playerTookTurn && player.isAlive())
         {
+            tryPickupItem(items, player, messageLog);
+
             removeDeadEnemies(enemies);
             updateEnemies(enemies, map, player, messageLog);
             removeDeadEnemies(enemies);
@@ -205,6 +330,17 @@ int main()
         window.clear(sf::Color::Black);
 
         map.draw(window);
+
+        for (const Item& item : items)
+        {
+            const sf::Vector2i itemPosition = item.getGridPosition();
+
+            // Fog of War nedeniyle sadece görünen item'ları çiziyoruz.
+            if (map.isVisible(itemPosition.x, itemPosition.y))
+            {
+                item.draw(window);
+            }
+        }
 
         for (const Enemy& enemy : enemies)
         {
