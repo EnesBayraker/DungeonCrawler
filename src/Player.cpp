@@ -60,6 +60,37 @@ const std::vector<Item>& Player::getInventory() const
     return m_inventory;
 }
 
+bool Player::useInventoryItem(std::size_t index, MessageLog& messageLog)
+{
+    if (index >= m_inventory.size())
+    {
+        return false;
+    }
+
+    const Item item = m_inventory[index];
+
+    switch (item.getType())
+    {
+        case ItemType::Potion:
+            heal(10);
+            messageLog.add("You drink " + item.getName() + " and restore 10 HP.");
+            break;
+
+        case ItemType::Weapon:
+            increaseDamage(2);
+            messageLog.add("You equip " + item.getName() + ". Attack damage increased.");
+            break;
+
+        case ItemType::Armor:
+            increaseMaxHp(5);
+            messageLog.add("You equip " + item.getName() + ". Max HP increased.");
+            break;
+    }
+
+    m_inventory.erase(m_inventory.begin() + static_cast<std::ptrdiff_t>(index));
+    return true;
+}
+
 bool Player::tryMoveOrAttack(
     const sf::Vector2i& direction,
     const Map& map,

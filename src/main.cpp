@@ -75,6 +75,42 @@ bool isInventoryCloseKey(const sf::Event& event)
            keyPressed->scancode == sf::Keyboard::Scancode::I;
 }
 
+int getInventorySelectionIndex(const sf::Event& event)
+{
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+
+    if (keyPressed == nullptr)
+    {
+        return -1;
+    }
+
+    using Scancode = sf::Keyboard::Scancode;
+
+    switch (keyPressed->scancode)
+    {
+        case Scancode::Num1:
+            return 0;
+        case Scancode::Num2:
+            return 1;
+        case Scancode::Num3:
+            return 2;
+        case Scancode::Num4:
+            return 3;
+        case Scancode::Num5:
+            return 4;
+        case Scancode::Num6:
+            return 5;
+        case Scancode::Num7:
+            return 6;
+        case Scancode::Num8:
+            return 7;
+        case Scancode::Num9:
+            return 8;
+        default:
+            return -1;
+    }
+}
+
 ItemType getRandomItemType(std::mt19937& randomEngine)
 {
     const int roll = randomInt(randomEngine, 0, 2);
@@ -109,6 +145,11 @@ std::vector<Enemy> createEnemies(const Map& map, const sf::Vector2i& playerPosit
         const sf::Vector2i spawnPosition = room.getCenter();
 
         if (spawnPosition == playerPosition)
+        {
+            continue;
+        }
+
+        if (spawnPosition == map.getStairsPosition())
         {
             continue;
         }
@@ -156,6 +197,11 @@ std::vector<Item> createItems(
             continue;
         }
 
+        if (itemPosition == map.getStairsPosition())
+        {
+            continue;
+        }
+
         if (isEnemyAtPosition(enemies, itemPosition))
         {
             continue;
@@ -170,6 +216,24 @@ std::vector<Item> createItems(
     }
 
     return items;
+}
+
+void startNextFloor(
+    Map& map,
+    Player& player,
+    std::vector<Enemy>& enemies,
+    std::vector<Item>& items,
+    MessageLog& messageLog
+)
+{
+    map.generateNewFloor();
+
+    player.setGridPosition(map.getPlayerStart());
+
+    enemies = createEnemies(map, player.getGridPosition());
+    items = createItems(map, player.getGridPosition(), enemies);
+
+    messageLog.add("You descend to a deeper floor.");
 }
 
 void tryPickupItem(
@@ -341,6 +405,19 @@ int main()
                 if (isInventoryCloseKey(*event))
                 {
                     inventoryOpen = false;
+                    continue;
+                }
+
+                const int selectedIndex = getInventorySelectionIndex(*event);
+
+                if (
+                    selectedIndex >= 0 &&
+                    player.isAlive() &&
+                    player.useInventoryItem(static_cast<std::size_t>(selectedIndex), messageLog)
+                )
+                {
+                    inventoryOpen = false;
+                    playerTookTurn = true;
                 }
 
                 continue;
@@ -365,9 +442,16 @@ int main()
         {
             tryPickupItem(items, player, messageLog);
 
-            removeDeadEnemies(enemies);
-            updateEnemies(enemies, map, player, messageLog);
-            removeDeadEnemies(enemies);
+            if (player.getGridPosition() == map.getStairsPosition())
+            {
+                startNextFloor(map, player, enemies, items, messageLog);
+            }
+            else
+            {
+                removeDeadEnemies(enemies);
+                updateEnemies(enemies, map, player, messageLog);
+                removeDeadEnemies(enemies);
+            }
         }
 
         map.computeFov(player.getGridPosition(), 6);

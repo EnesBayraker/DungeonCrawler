@@ -29,6 +29,8 @@ public:
 
     Map();
 
+    void generateNewFloor();
+
     void draw(sf::RenderWindow& window) const;
     bool isWalkable(int x, int y) const;
     bool isVisible(int x, int y) const;
@@ -38,6 +40,7 @@ public:
     void computeFov(const sf::Vector2i& origin, int radius);
 
     sf::Vector2i getPlayerStart() const;
+    sf::Vector2i getStairsPosition() const;
     const std::vector<Room>& getRooms() const;
 
 private:
@@ -55,13 +58,14 @@ private:
     std::vector<Room> m_rooms;
 
     sf::Vector2i m_playerStart;
+    sf::Vector2i m_stairsPosition;
     std::mt19937 m_randomEngine;
 
     void generateBspMap();
     void splitArea(const Area& area, int depth);
     void createRoomInArea(const Area& area);
     void carveRoom(const Room& room);
-
+    void placeStairs();
     void connectRooms();
     void carveHorizontalCorridor(int x1, int x2, int y);
     void carveVerticalCorridor(int y1, int y2, int x);

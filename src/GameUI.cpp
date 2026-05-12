@@ -57,9 +57,10 @@ void GameUI::draw(sf::RenderWindow& window, const Player& player, const MessageL
     sf::Text hpText(
         m_font,
         "HP: " + std::to_string(player.getHp()) +
-        " | Damage: " + std::to_string(player.getDamage()) +
-        " | Inventory: " + std::to_string(player.getInventory().size()) +
-        " item(s) | Press I",
+  "/" + std::to_string(player.getMaxHp()) +
+  " | Attack: " + std::to_string(player.getDamage()) +
+  " | Inventory: " + std::to_string(player.getInventory().size()) +
+  " item(s) | Press I",
         20
     );
 
@@ -105,7 +106,7 @@ void GameUI::drawInventory(sf::RenderWindow& window, const Player& player) const
 
     window.draw(titleText);
 
-    sf::Text helpText(m_font, "Press I or Escape to close", 16);
+    sf::Text helpText(m_font, "Press 1-9 to use an item | Press I or Escape to close", 16);
     helpText.setFillColor(sf::Color(180, 180, 180));
     helpText.setPosition({165.f, 150.f});
 

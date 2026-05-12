@@ -5,6 +5,7 @@
 Entity::Entity(const sf::Vector2i& gridPosition, int hp, int damage, const sf::Color& color)
     : m_gridPosition(gridPosition),
       m_hp(hp),
+      m_maxHp(hp),
       m_damage(damage)
 {
     // Entity tile içinde biraz küçük çizilir.
@@ -35,6 +36,11 @@ int Entity::getHp() const
     return m_hp;
 }
 
+int Entity::getMaxHp() const
+{
+    return m_maxHp;
+}
+
 int Entity::getDamage() const
 {
     return m_damage;
@@ -53,6 +59,27 @@ void Entity::takeDamage(int amount)
     {
         m_hp = 0;
     }
+}
+
+void Entity::heal(int amount)
+{
+    m_hp += amount;
+
+    if (m_hp > m_maxHp)
+    {
+        m_hp = m_maxHp;
+    }
+}
+
+void Entity::increaseDamage(int amount)
+{
+    m_damage += amount;
+}
+
+void Entity::increaseMaxHp(int amount)
+{
+    m_maxHp += amount;
+    m_hp += amount;
 }
 
 void Entity::updateShapePosition()

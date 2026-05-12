@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
+#include <cstddef>
 #include <vector>
 
 #include "Entity.h"
@@ -24,6 +25,8 @@ public:
     );
 
     void addItem(const Item& item);
+    bool useInventoryItem(std::size_t index, MessageLog& messageLog);
+
     const std::vector<Item>& getInventory() const;
 
 private:

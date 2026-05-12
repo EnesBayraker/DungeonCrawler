@@ -13,7 +13,13 @@ sf::Vector2i Room::getCenter() const
 
 Map::Map()
     : m_playerStart(1, 1),
+    m_stairsPosition(1, 1),
       m_randomEngine(std::random_device{}())
+{
+    generateBspMap();
+}
+
+void Map::generateNewFloor()
 {
     generateBspMap();
 }
@@ -38,11 +44,14 @@ void Map::generateBspMap()
     connectRooms();
 
     if (!m_rooms.empty())
-    {
-        // Oyuncuyu rastgele bir odanın merkezinde başlatıyoruz.
-        const int roomIndex = randomInt(0, static_cast<int>(m_rooms.size()) - 1);
-        m_playerStart = m_rooms[roomIndex].getCenter();
-    }
+{
+    // Oyuncuyu rastgele bir odanın merkezinde başlatıyoruz.
+    const int roomIndex = randomInt(0, static_cast<int>(m_rooms.size()) - 1);
+    m_playerStart = m_rooms[roomIndex].getCenter();
+
+    placeStairs();
+}
+
 }
 
 void Map::splitArea(const Area& area, int depth)
@@ -212,6 +221,36 @@ void Map::setFloor(int x, int y)
     }
 }
 
+void Map::placeStairs()
+{
+    if (m_rooms.empty())
+    {
+        m_stairsPosition = m_playerStart;
+        return;
+    }
+
+    int bestDistance = -1;
+    sf::Vector2i bestPosition = m_rooms.front().getCenter();
+
+    for (const Room& room : m_rooms)
+    {
+        const sf::Vector2i center = room.getCenter();
+
+        const int distance =
+            std::abs(center.x - m_playerStart.x) +
+            std::abs(center.y - m_playerStart.y);
+
+        if (distance > bestDistance)
+        {
+            bestDistance = distance;
+            bestPosition = center;
+        }
+    }
+
+    // Merdiveni başlangıca en uzak odanın merkezine koyuyoruz.
+    m_stairsPosition = bestPosition;
+}
+
 bool Map::isInsideMap(int x, int y) const
 {
     return x >= 0 && x < Width && y >= 0 && y < Height;
@@ -360,6 +399,11 @@ sf::Vector2i Map::getPlayerStart() const
     return m_playerStart;
 }
 
+sf::Vector2i Map::getStairsPosition() const
+{
+    return m_stairsPosition;
+}
+
 const std::vector<Room>& Map::getRooms() const
 {
     return m_rooms;
@@ -396,7 +440,11 @@ void Map::draw(sf::RenderWindow& window) const
                 // Daha önce görülmüş ama şu an görüş dışında olan alan.
                 tileShape.setOutlineColor(sf::Color(10, 10, 10));
 
-                if (m_tiles[y][x] == TileType::Wall)
+                if (x == m_stairsPosition.x && y == m_stairsPosition.y)
+                {
+                    tileShape.setFillColor(sf::Color(45, 35, 65));
+                }
+                else if (m_tiles[y][x] == TileType::Wall)
                 {
                     tileShape.setFillColor(sf::Color(35, 35, 35));
                 }
@@ -410,7 +458,11 @@ void Map::draw(sf::RenderWindow& window) const
                 // Şu an aktif olarak görülen alan.
                 tileShape.setOutlineColor(sf::Color(45, 45, 45));
 
-                if (m_tiles[y][x] == TileType::Wall)
+                if (x == m_stairsPosition.x && y == m_stairsPosition.y)
+                {
+                    tileShape.setFillColor(sf::Color(130, 90, 190));
+                }
+                else if (m_tiles[y][x] == TileType::Wall)
                 {
                     tileShape.setFillColor(sf::Color(110, 110, 110));
                 }
