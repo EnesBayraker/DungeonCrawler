@@ -50,6 +50,31 @@ bool isItemAtPosition(const std::vector<Item>& items, const sf::Vector2i& positi
     return false;
 }
 
+bool isInventoryToggleKey(const sf::Event& event)
+{
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+
+    if (keyPressed == nullptr)
+    {
+        return false;
+    }
+
+    return keyPressed->scancode == sf::Keyboard::Scancode::I;
+}
+
+bool isInventoryCloseKey(const sf::Event& event)
+{
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+
+    if (keyPressed == nullptr)
+    {
+        return false;
+    }
+
+    return keyPressed->scancode == sf::Keyboard::Scancode::Escape ||
+           keyPressed->scancode == sf::Keyboard::Scancode::I;
+}
+
 ItemType getRandomItemType(std::mt19937& randomEngine)
 {
     const int roll = randomInt(randomEngine, 0, 2);
@@ -149,7 +174,7 @@ std::vector<Item> createItems(
 
 void tryPickupItem(
     std::vector<Item>& items,
-    const Player& player,
+    Player& player,
     MessageLog& messageLog
 )
 {
@@ -169,9 +194,11 @@ void tryPickupItem(
         return;
     }
 
+    player.addItem(*itemIt);
+
     messageLog.add("You picked up " + itemIt->getName() + ".");
 
-    // Envanter sonradan eklenecek
+    // Item artık envantere eklendiği için yerden kaldırıyoruz.
     items.erase(itemIt);
 }
 
@@ -294,6 +321,8 @@ int main()
     std::vector<Enemy> enemies = createEnemies(map, player.getGridPosition());
     std::vector<Item> items = createItems(map, player.getGridPosition(), enemies);
 
+    bool inventoryOpen = false;
+
     messageLog.add("Welcome to the dungeon.");
 
     while (window.isOpen())
@@ -307,6 +336,22 @@ int main()
                 window.close();
             }
 
+            if (inventoryOpen)
+            {
+                if (isInventoryCloseKey(*event))
+                {
+                    inventoryOpen = false;
+                }
+
+                continue;
+            }
+
+            if (isInventoryToggleKey(*event))
+            {
+                inventoryOpen = true;
+                continue;
+            }
+
             if (
                 player.isAlive() &&
                 player.handleInput(*event, map, enemies, messageLog)
@@ -316,7 +361,7 @@ int main()
             }
         }
 
-        if (playerTookTurn && player.isAlive())
+        if (playerTookTurn && player.isAlive() && !inventoryOpen)
         {
             tryPickupItem(items, player, messageLog);
 
@@ -354,6 +399,11 @@ int main()
 
         player.draw(window);
         gameUI.draw(window, player, messageLog);
+
+        if (inventoryOpen)
+        {
+            gameUI.drawInventory(window, player);
+        }
 
         window.display();
     }

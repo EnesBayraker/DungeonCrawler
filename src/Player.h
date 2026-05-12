@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Entity.h"
+#include "Item.h"
 
 class Enemy;
 class Map;
@@ -22,7 +23,12 @@ public:
         MessageLog& messageLog
     );
 
+    void addItem(const Item& item);
+    const std::vector<Item>& getInventory() const;
+
 private:
+    std::vector<Item> m_inventory;
+
     bool tryMoveOrAttack(
         const sf::Vector2i& direction,
         const Map& map,

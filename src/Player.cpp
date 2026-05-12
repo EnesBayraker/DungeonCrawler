@@ -50,6 +50,16 @@ bool Player::handleInput(
     return false;
 }
 
+void Player::addItem(const Item& item)
+{
+    m_inventory.push_back(item);
+}
+
+const std::vector<Item>& Player::getInventory() const
+{
+    return m_inventory;
+}
+
 bool Player::tryMoveOrAttack(
     const sf::Vector2i& direction,
     const Map& map,

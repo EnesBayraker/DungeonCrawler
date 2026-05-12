@@ -2,7 +2,9 @@
 
 #include <array>
 #include <string>
+#include <vector>
 
+#include "Item.h"
 #include "Map.h"
 #include "MessageLog.h"
 #include "Player.h"
@@ -15,7 +17,6 @@ GameUI::GameUI()
 bool GameUI::loadFont()
 {
     // Windows için sistem fontlarını deniyoruz.
-    // Daha sonra assets klasörü kullanırsak burayı değiştirebiliriz.
     const std::array<std::string, 3> fontPaths{
         "C:/Windows/Fonts/arial.ttf",
         "C:/Windows/Fonts/segoeui.ttf",
@@ -56,7 +57,9 @@ void GameUI::draw(sf::RenderWindow& window, const Player& player, const MessageL
     sf::Text hpText(
         m_font,
         "HP: " + std::to_string(player.getHp()) +
-        " | Damage: " + std::to_string(player.getDamage()),
+        " | Damage: " + std::to_string(player.getDamage()) +
+        " | Inventory: " + std::to_string(player.getInventory().size()) +
+        " item(s) | Press I",
         20
     );
 
@@ -78,5 +81,61 @@ void GameUI::draw(sf::RenderWindow& window, const Player& player, const MessageL
         window.draw(messageText);
 
         messageY += 18.f;
+    }
+}
+
+void GameUI::drawInventory(sf::RenderWindow& window, const Player& player) const
+{
+    if (!m_fontLoaded)
+    {
+        return;
+    }
+
+    sf::RectangleShape overlay({520.f, 420.f});
+    overlay.setPosition({140.f, 90.f});
+    overlay.setFillColor(sf::Color(10, 10, 10, 235));
+    overlay.setOutlineThickness(3.f);
+    overlay.setOutlineColor(sf::Color(180, 180, 180));
+
+    window.draw(overlay);
+
+    sf::Text titleText(m_font, "Inventory", 28);
+    titleText.setFillColor(sf::Color::White);
+    titleText.setPosition({165.f, 115.f});
+
+    window.draw(titleText);
+
+    sf::Text helpText(m_font, "Press I or Escape to close", 16);
+    helpText.setFillColor(sf::Color(180, 180, 180));
+    helpText.setPosition({165.f, 150.f});
+
+    window.draw(helpText);
+
+    const std::vector<Item>& inventory = player.getInventory();
+
+    if (inventory.empty())
+    {
+        sf::Text emptyText(m_font, "Your inventory is empty.", 20);
+        emptyText.setFillColor(sf::Color(220, 220, 220));
+        emptyText.setPosition({165.f, 200.f});
+
+        window.draw(emptyText);
+        return;
+    }
+
+    float itemY = 200.f;
+
+    for (std::size_t i = 0; i < inventory.size(); ++i)
+    {
+        const std::string line =
+            std::to_string(i + 1) + ") " + inventory[i].getName();
+
+        sf::Text itemText(m_font, line, 20);
+        itemText.setFillColor(sf::Color(220, 220, 220));
+        itemText.setPosition({165.f, itemY});
+
+        window.draw(itemText);
+
+        itemY += 28.f;
     }
 }
