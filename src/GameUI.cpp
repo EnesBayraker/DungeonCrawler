@@ -60,7 +60,7 @@ void GameUI::draw(sf::RenderWindow& window, const Player& player, const MessageL
   "/" + std::to_string(player.getMaxHp()) +
   " | Attack: " + std::to_string(player.getDamage()) +
   " | Inventory: " + std::to_string(player.getInventory().size()) +
-  " item(s) | Press I",
+  " item(s) | I: Inventory | F5: Save",
         20
     );
 

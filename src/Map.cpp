@@ -375,6 +375,26 @@ bool Map::isVisible(int x, int y) const
     return m_visible[y][x];
 }
 
+bool Map::isExplored(int x, int y) const
+{
+    if (!isInsideMap(x, y))
+    {
+        return false;
+    }
+
+    return m_explored[y][x];
+}
+
+TileType Map::getTile(int x, int y) const
+{
+    if (!isInsideMap(x, y))
+    {
+        return TileType::Wall;
+    }
+
+    return m_tiles[y][x];
+}
+
 bool Map::canSee(const sf::Vector2i& origin, const sf::Vector2i& target, int radius) const
 {
     if (!isInsideMap(origin.x, origin.y) || !isInsideMap(target.x, target.y))

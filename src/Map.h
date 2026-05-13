@@ -35,7 +35,8 @@ public:
     bool isWalkable(int x, int y) const;
     bool isVisible(int x, int y) const;
     bool canSee(const sf::Vector2i& origin, const sf::Vector2i& target, int radius) const;
-
+    TileType getTile(int x, int y) const;
+    bool isExplored(int x, int y) const;
 
     void computeFov(const sf::Vector2i& origin, int radius);
 

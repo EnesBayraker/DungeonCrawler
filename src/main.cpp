@@ -12,6 +12,7 @@
 #include "Map.h"
 #include "MessageLog.h"
 #include "Player.h"
+#include "SaveSystem.h"
 
 int randomInt(std::mt19937& randomEngine, int min, int max)
 {
@@ -73,6 +74,18 @@ bool isInventoryCloseKey(const sf::Event& event)
 
     return keyPressed->scancode == sf::Keyboard::Scancode::Escape ||
            keyPressed->scancode == sf::Keyboard::Scancode::I;
+}
+
+bool isSaveKey(const sf::Event& event)
+{
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+
+    if (keyPressed == nullptr)
+    {
+        return false;
+    }
+
+    return keyPressed->scancode == sf::Keyboard::Scancode::F5;
 }
 
 int getInventorySelectionIndex(const sf::Event& event)
@@ -419,6 +432,20 @@ int main()
                     inventoryOpen = false;
                     playerTookTurn = true;
                 }
+
+                continue;
+            }
+
+            if (isSaveKey(*event))
+            {
+                SaveSystem::saveGame(
+                    "savegame.txt",
+                    map,
+                    player,
+                    enemies,
+                    items,
+                    messageLog
+                );
 
                 continue;
             }
