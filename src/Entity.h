@@ -23,6 +23,8 @@ public:
     void increaseDamage(int amount);
     void increaseMaxHp(int amount);
 
+    void setCombatStats(int hp, int maxHp, int damage);
+
 protected:
     sf::RectangleShape m_shape;
     sf::Vector2i m_gridPosition;

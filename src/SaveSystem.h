@@ -20,4 +20,13 @@ public:
         const std::vector<Item>& items,
         MessageLog& messageLog
     );
+
+    static bool loadGame(
+        const std::string& filePath,
+        Map& map,
+        Player& player,
+        std::vector<Enemy>& enemies,
+        std::vector<Item>& items,
+        MessageLog& messageLog
+    );
 };

@@ -140,3 +140,41 @@ void GameUI::drawInventory(sf::RenderWindow& window, const Player& player) const
         itemY += 28.f;
     }
 }
+
+void GameUI::drawMainMenu(sf::RenderWindow& window, const std::string& statusMessage) const
+{
+    if (!m_fontLoaded)
+    {
+        return;
+    }
+
+    sf::Text titleText(m_font, "Roguelike Dungeon Crawler", 38);
+    titleText.setFillColor(sf::Color::White);
+    titleText.setPosition({155.f, 150.f});
+
+    window.draw(titleText);
+
+    sf::Text startText(m_font, "Enter - Start New Game", 24);
+    startText.setFillColor(sf::Color(220, 220, 220));
+    startText.setPosition({245.f, 250.f});
+
+    window.draw(startText);
+
+    sf::Text loadText(m_font, "L - Load Game", 24);
+    loadText.setFillColor(sf::Color(220, 220, 220));
+    loadText.setPosition({245.f, 290.f});
+
+    window.draw(loadText);
+
+    sf::Text exitText(m_font, "Escape - Exit", 24);
+    exitText.setFillColor(sf::Color(220, 220, 220));
+    exitText.setPosition({245.f, 330.f});
+
+    window.draw(exitText);
+
+    sf::Text statusText(m_font, statusMessage, 18);
+    statusText.setFillColor(sf::Color(180, 180, 180));
+    statusText.setPosition({180.f, 410.f});
+
+    window.draw(statusText);
+}

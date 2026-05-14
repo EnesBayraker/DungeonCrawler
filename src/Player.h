@@ -24,6 +24,7 @@ public:
         MessageLog& messageLog
     );
 
+    void clearInventory();
     void addItem(const Item& item);
     bool useInventoryItem(std::size_t index, MessageLog& messageLog);
 

@@ -55,6 +55,11 @@ void Player::addItem(const Item& item)
     m_inventory.push_back(item);
 }
 
+void Player::clearInventory()
+{
+    m_inventory.clear();
+}
+
 const std::vector<Item>& Player::getInventory() const
 {
     return m_inventory;

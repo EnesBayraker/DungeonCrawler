@@ -82,6 +82,28 @@ void Entity::increaseMaxHp(int amount)
     m_hp += amount;
 }
 
+void Entity::setCombatStats(int hp, int maxHp, int damage)
+{
+    if (maxHp < 1)
+    {
+        maxHp = 1;
+    }
+
+    if (hp < 0)
+    {
+        hp = 0;
+    }
+
+    if (hp > maxHp)
+    {
+        hp = maxHp;
+    }
+
+    m_hp = hp;
+    m_maxHp = maxHp;
+    m_damage = damage;
+}
+
 void Entity::updateShapePosition()
 {
     m_shape.setPosition({

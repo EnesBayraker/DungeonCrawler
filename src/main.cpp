@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <random>
+#include <string>
 #include <vector>
 
 #include "Enemy.h"
@@ -13,6 +14,12 @@
 #include "MessageLog.h"
 #include "Player.h"
 #include "SaveSystem.h"
+
+enum class GameState
+{
+    MainMenu,
+    Playing
+};
 
 int randomInt(std::mt19937& randomEngine, int min, int max)
 {
@@ -124,6 +131,42 @@ int getInventorySelectionIndex(const sf::Event& event)
     }
 }
 
+bool isStartNewGameKey(const sf::Event& event)
+{
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+
+    if (keyPressed == nullptr)
+    {
+        return false;
+    }
+
+    return keyPressed->scancode == sf::Keyboard::Scancode::Enter;
+}
+
+bool isLoadGameKey(const sf::Event& event)
+{
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+
+    if (keyPressed == nullptr)
+    {
+        return false;
+    }
+
+    return keyPressed->scancode == sf::Keyboard::Scancode::L;
+}
+
+bool isExitKey(const sf::Event& event)
+{
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+
+    if (keyPressed == nullptr)
+    {
+        return false;
+    }
+
+    return keyPressed->scancode == sf::Keyboard::Scancode::Escape;
+}
+
 ItemType getRandomItemType(std::mt19937& randomEngine)
 {
     const int roll = randomInt(randomEngine, 0, 2);
@@ -194,7 +237,6 @@ std::vector<Item> createItems(
             break;
         }
 
-        // Her odada item olmak zorunda değil.
         if (randomInt(randomEngine, 0, 100) > 65)
         {
             continue;
@@ -229,6 +271,27 @@ std::vector<Item> createItems(
     }
 
     return items;
+}
+
+void startNewGame(
+    Map& map,
+    Player& player,
+    std::vector<Enemy>& enemies,
+    std::vector<Item>& items,
+    MessageLog& messageLog
+)
+{
+    map.generateNewFloor();
+
+    player.setCombatStats(30, 30, 5);
+    player.clearInventory();
+    player.setGridPosition(map.getPlayerStart());
+
+    enemies = createEnemies(map, player.getGridPosition());
+    items = createItems(map, player.getGridPosition(), enemies);
+
+    messageLog = MessageLog();
+    messageLog.add("New game started.");
 }
 
 void startNextFloor(
@@ -275,7 +338,6 @@ void tryPickupItem(
 
     messageLog.add("You picked up " + itemIt->getName() + ".");
 
-    // Item artık envantere eklendiği için yerden kaldırıyoruz.
     items.erase(itemIt);
 }
 
@@ -334,7 +396,6 @@ std::vector<bool> calculateGroupAlertStates(
             continue;
         }
 
-        // Oyuncuyu gören düşman, yakınındaki diğer düşmanları da alarma geçirir.
         for (std::size_t j = 0; j < enemies.size(); ++j)
         {
             const sf::Vector2i allyPosition = enemies[j].getGridPosition();
@@ -393,14 +454,13 @@ int main()
     MessageLog messageLog;
     GameUI gameUI;
 
-    player.setGridPosition(map.getPlayerStart());
+    std::vector<Enemy> enemies;
+    std::vector<Item> items;
 
-    std::vector<Enemy> enemies = createEnemies(map, player.getGridPosition());
-    std::vector<Item> items = createItems(map, player.getGridPosition(), enemies);
-
+    GameState gameState = GameState::MainMenu;
     bool inventoryOpen = false;
 
-    messageLog.add("Welcome to the dungeon.");
+    std::string menuStatus = "Enter: new game | L: load save | Escape: exit";
 
     while (window.isOpen())
     {
@@ -411,6 +471,51 @@ int main()
             if (event->is<sf::Event::Closed>())
             {
                 window.close();
+            }
+
+            if (gameState == GameState::MainMenu)
+            {
+                if (isStartNewGameKey(*event))
+                {
+                    startNewGame(map, player, enemies, items, messageLog);
+                    inventoryOpen = false;
+                    gameState = GameState::Playing;
+                    continue;
+                }
+
+                if (isLoadGameKey(*event))
+                {
+                    messageLog = MessageLog();
+
+                    if (
+                        SaveSystem::loadGame(
+                            "savegame.txt",
+                            map,
+                            player,
+                            enemies,
+                            items,
+                            messageLog
+                        )
+                    )
+                    {
+                        inventoryOpen = false;
+                        gameState = GameState::Playing;
+                    }
+                    else
+                    {
+                        menuStatus = "Load failed. Make sure savegame.txt exists.";
+                    }
+
+                    continue;
+                }
+
+                if (isExitKey(*event))
+                {
+                    window.close();
+                    continue;
+                }
+
+                continue;
             }
 
             if (inventoryOpen)
@@ -465,7 +570,12 @@ int main()
             }
         }
 
-        if (playerTookTurn && player.isAlive() && !inventoryOpen)
+        if (
+            gameState == GameState::Playing &&
+            playerTookTurn &&
+            player.isAlive() &&
+            !inventoryOpen
+        )
         {
             tryPickupItem(items, player, messageLog);
 
@@ -481,9 +591,19 @@ int main()
             }
         }
 
-        map.computeFov(player.getGridPosition(), 6);
+        if (gameState == GameState::Playing)
+        {
+            map.computeFov(player.getGridPosition(), 6);
+        }
 
         window.clear(sf::Color::Black);
+
+        if (gameState == GameState::MainMenu)
+        {
+            gameUI.drawMainMenu(window, menuStatus);
+            window.display();
+            continue;
+        }
 
         map.draw(window);
 
@@ -491,7 +611,6 @@ int main()
         {
             const sf::Vector2i itemPosition = item.getGridPosition();
 
-            // Fog of War nedeniyle sadece görünen item'ları çiziyoruz.
             if (map.isVisible(itemPosition.x, itemPosition.y))
             {
                 item.draw(window);

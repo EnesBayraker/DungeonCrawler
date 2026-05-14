@@ -395,6 +395,31 @@ TileType Map::getTile(int x, int y) const
     return m_tiles[y][x];
 }
 
+void Map::setTile(int x, int y, TileType tile)
+{
+    if (!isInsideMap(x, y))
+    {
+        return;
+    }
+
+    m_tiles[y][x] = tile;
+}
+
+void Map::setExplored(int x, int y, bool explored)
+{
+    if (!isInsideMap(x, y))
+    {
+        return;
+    }
+
+    m_explored[y][x] = explored;
+}
+
+void Map::setStairsPosition(const sf::Vector2i& position)
+{
+    m_stairsPosition = position;
+}
+
 bool Map::canSee(const sf::Vector2i& origin, const sf::Vector2i& target, int radius) const
 {
     if (!isInsideMap(origin.x, origin.y) || !isInsideMap(target.x, target.y))

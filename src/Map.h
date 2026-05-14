@@ -37,6 +37,9 @@ public:
     bool canSee(const sf::Vector2i& origin, const sf::Vector2i& target, int radius) const;
     TileType getTile(int x, int y) const;
     bool isExplored(int x, int y) const;
+    void setTile(int x, int y, TileType tile);
+    void setExplored(int x, int y, bool explored);
+    void setStairsPosition(const sf::Vector2i& position);
 
     void computeFov(const sf::Vector2i& origin, int radius);
 
