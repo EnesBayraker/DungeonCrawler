@@ -178,3 +178,48 @@ void GameUI::drawMainMenu(sf::RenderWindow& window, const std::string& statusMes
 
     window.draw(statusText);
 }
+
+void GameUI::drawGameOver(sf::RenderWindow& window, const Player& player) const
+{
+    if (!m_fontLoaded)
+    {
+        return;
+    }
+
+    sf::RectangleShape overlay({800.f, 720.f});
+    overlay.setPosition({0.f, 0.f});
+    overlay.setFillColor(sf::Color(0, 0, 0, 190));
+
+    window.draw(overlay);
+
+    sf::Text titleText(m_font, "GAME OVER", 54);
+    titleText.setFillColor(sf::Color(220, 60, 60));
+    titleText.setPosition({250.f, 210.f});
+
+    window.draw(titleText);
+
+    sf::Text statsText(
+        m_font,
+        "Final HP: " + std::to_string(player.getHp()) +
+        "/" + std::to_string(player.getMaxHp()) +
+        " | Attack: " + std::to_string(player.getDamage()),
+        22
+    );
+
+    statsText.setFillColor(sf::Color(220, 220, 220));
+    statsText.setPosition({245.f, 295.f});
+
+    window.draw(statsText);
+
+    sf::Text menuText(m_font, "Enter - Return to Main Menu", 24);
+    menuText.setFillColor(sf::Color::White);
+    menuText.setPosition({245.f, 355.f});
+
+    window.draw(menuText);
+
+    sf::Text exitText(m_font, "Escape - Exit", 22);
+    exitText.setFillColor(sf::Color(190, 190, 190));
+    exitText.setPosition({245.f, 395.f});
+
+    window.draw(exitText);
+}

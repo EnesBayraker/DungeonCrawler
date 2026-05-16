@@ -18,7 +18,8 @@
 enum class GameState
 {
     MainMenu,
-    Playing
+    Playing,
+    GameOver
 };
 
 int randomInt(std::mt19937& randomEngine, int min, int max)
@@ -165,6 +166,18 @@ bool isExitKey(const sf::Event& event)
     }
 
     return keyPressed->scancode == sf::Keyboard::Scancode::Escape;
+}
+
+bool isReturnToMenuKey(const sf::Event& event)
+{
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+
+    if (keyPressed == nullptr)
+    {
+        return false;
+    }
+
+    return keyPressed->scancode == sf::Keyboard::Scancode::Enter;
 }
 
 ItemType getRandomItemType(std::mt19937& randomEngine)
@@ -518,6 +531,25 @@ int main()
                 continue;
             }
 
+            if (gameState == GameState::GameOver)
+            {
+                if (isReturnToMenuKey(*event))
+                {
+                    inventoryOpen = false;
+                    menuStatus = "Enter: new game | L: load save | Escape: exit";
+                    gameState = GameState::MainMenu;
+                    continue;
+                }
+
+                if (isExitKey(*event))
+                {
+                    window.close();
+                    continue;
+                }
+
+                continue;
+            }
+
             if (inventoryOpen)
             {
                 if (isInventoryCloseKey(*event))
@@ -571,11 +603,11 @@ int main()
         }
 
         if (
-            gameState == GameState::Playing &&
-            playerTookTurn &&
-            player.isAlive() &&
-            !inventoryOpen
-        )
+    gameState == GameState::Playing &&
+    playerTookTurn &&
+    player.isAlive() &&
+    !inventoryOpen
+)
         {
             tryPickupItem(items, player, messageLog);
 
@@ -589,9 +621,15 @@ int main()
                 updateEnemies(enemies, map, player, messageLog);
                 removeDeadEnemies(enemies);
             }
+
+            if (!player.isAlive())
+            {
+                inventoryOpen = false;
+                gameState = GameState::GameOver;
+            }
         }
 
-        if (gameState == GameState::Playing)
+        if (gameState == GameState::Playing || gameState == GameState::GameOver)
         {
             map.computeFov(player.getGridPosition(), 6);
         }
@@ -633,6 +671,11 @@ int main()
         if (inventoryOpen)
         {
             gameUI.drawInventory(window, player);
+        }
+
+        if (gameState == GameState::GameOver)
+        {
+            gameUI.drawGameOver(window, player);
         }
 
         window.display();
