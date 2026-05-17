@@ -101,8 +101,7 @@ bool Player::tryMoveOrAttack(
     const Map& map,
     std::vector<Enemy>& enemies,
     MessageLog& messageLog
-)
-{
+) {
     const sf::Vector2i targetPosition = m_gridPosition + direction;
 
     for (Enemy& enemy : enemies)
@@ -132,5 +131,6 @@ bool Player::tryMoveOrAttack(
         return true;
     }
 
-    return false;
+    // Yön tuşuna basıldıysa, duvara çarpmak bile bir turn harcar.
+    return true;
 }

@@ -1,0 +1,85 @@
+#pragma once
+
+#include <SFML/Graphics.hpp>
+
+#include <cstddef>
+#include <random>
+#include <string>
+#include <vector>
+
+#include "Enemy.h"
+#include "GameUI.h"
+#include "Item.h"
+#include "Map.h"
+#include "MessageLog.h"
+#include "Player.h"
+
+enum class GameState
+{
+    MainMenu,
+    Playing,
+    GameOver
+};
+
+class Game
+{
+public:
+    Game();
+
+    void run();
+
+private:
+    sf::RenderWindow m_window;
+
+    Map m_map;
+    Player m_player;
+    MessageLog m_messageLog;
+    GameUI m_gameUI;
+
+    std::vector<Enemy> m_enemies;
+    std::vector<Item> m_items;
+
+    GameState m_gameState;
+    bool m_inventoryOpen;
+    std::string m_menuStatus;
+
+    void processEvents();
+    void updateAfterPlayerTurn(bool playerTookTurn);
+    void render();
+
+    void handleMainMenuEvent(const sf::Event& event);
+    void handleGameOverEvent(const sf::Event& event);
+    bool handleInventoryEvent(const sf::Event& event);
+    bool handlePlayingEvent(const sf::Event& event);
+
+    void startNewGame();
+    void startNextFloor();
+
+    void tryPickupItem();
+    void removeDeadEnemies();
+    void updateEnemies();
+
+    std::vector<Enemy> createEnemies(const sf::Vector2i& playerPosition) const;
+    std::vector<Item> createItems(const sf::Vector2i& playerPosition, const std::vector<Enemy>& enemies) const;
+
+    std::vector<sf::Vector2i> collectEnemyPositions(std::size_t ignoredIndex) const;
+    std::vector<bool> calculateGroupAlertStates(const sf::Vector2i& playerPosition) const;
+
+    ItemType getRandomItemType(std::mt19937& randomEngine) const;
+
+    bool isEnemyAtPosition(const std::vector<Enemy>& enemies, const sf::Vector2i& position) const;
+    bool isItemAtPosition(const std::vector<Item>& items, const sf::Vector2i& position) const;
+
+    int randomInt(std::mt19937& randomEngine, int min, int max) const;
+    int getManhattanDistance(const sf::Vector2i& first, const sf::Vector2i& second) const;
+
+    bool isInventoryToggleKey(const sf::Event& event) const;
+    bool isInventoryCloseKey(const sf::Event& event) const;
+    bool isSaveKey(const sf::Event& event) const;
+    bool isStartNewGameKey(const sf::Event& event) const;
+    bool isLoadGameKey(const sf::Event& event) const;
+    bool isExitKey(const sf::Event& event) const;
+    bool isReturnToMenuKey(const sf::Event& event) const;
+
+    int getInventorySelectionIndex(const sf::Event& event) const;
+};

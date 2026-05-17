@@ -33,6 +33,8 @@ add_executable(DungeonCrawler
         src/Item.cpp
         src/SaveSystem.h
         src/SaveSystem.cpp
+        src/Game.h
+        src/Game.cpp
 )
 
 target_compile_features(DungeonCrawler PRIVATE cxx_std_17)
