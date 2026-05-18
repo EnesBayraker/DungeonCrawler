@@ -9,9 +9,78 @@
 #include "MessageLog.h"
 #include "Player.h"
 
+namespace
+{
+    std::string getEnemyName(EnemyType type)
+    {
+        switch (type)
+        {
+            case EnemyType::Goblin:
+                return "Goblin";
+            case EnemyType::Skeleton:
+                return "Skeleton";
+            case EnemyType::Orc:
+                return "Orc";
+        }
+
+        return "Enemy";
+    }
+
+    int getEnemyHp(EnemyType type)
+    {
+        switch (type)
+        {
+            case EnemyType::Goblin:
+                return 10;
+            case EnemyType::Skeleton:
+                return 8;
+            case EnemyType::Orc:
+                return 16;
+        }
+
+        return 10;
+    }
+
+    int getEnemyDamage(EnemyType type)
+    {
+        switch (type)
+        {
+            case EnemyType::Goblin:
+                return 3;
+            case EnemyType::Skeleton:
+                return 4;
+            case EnemyType::Orc:
+                return 5;
+        }
+
+        return 3;
+    }
+
+    sf::Color getEnemyColor(EnemyType type)
+    {
+        switch (type)
+        {
+            case EnemyType::Goblin:
+                return sf::Color(210, 60, 60);
+            case EnemyType::Skeleton:
+                return sf::Color(210, 210, 210);
+            case EnemyType::Orc:
+                return sf::Color(80, 170, 80);
+        }
+
+        return sf::Color::Red;
+    }
+}
+
 Enemy::Enemy(const sf::Vector2i& gridPosition)
-    : Entity(gridPosition, 10, 3, sf::Color::Red),
-      m_name("Goblin"),
+    : Enemy(EnemyType::Goblin, gridPosition)
+{
+}
+
+Enemy::Enemy(EnemyType type, const sf::Vector2i& gridPosition)
+    : Entity(gridPosition, getEnemyHp(type), getEnemyDamage(type), getEnemyColor(type)),
+      m_type(type),
+      m_name(getEnemyName(type)),
       m_state(EnemyState::Wander),
       m_randomEngine(std::random_device{}())
 {
@@ -29,7 +98,6 @@ void Enemy::updateAI(
 
     if (isAdjacentToPlayer(playerPosition))
     {
-        // Oyuncuya bitişikse hareket etmek yerine saldırır.
         player.takeDamage(m_damage);
 
         messageLog.add(
@@ -77,6 +145,11 @@ void Enemy::updateAI(
 EnemyState Enemy::getState() const
 {
     return m_state;
+}
+
+EnemyType Enemy::getType() const
+{
+    return m_type;
 }
 
 const std::string& Enemy::getName() const

@@ -66,6 +66,7 @@ private:
     std::vector<bool> calculateGroupAlertStates(const sf::Vector2i& playerPosition) const;
 
     ItemType getRandomItemType(std::mt19937& randomEngine) const;
+    EnemyType getRandomEnemyType(std::mt19937& randomEngine) const;
 
     bool isEnemyAtPosition(const std::vector<Enemy>& enemies, const sf::Vector2i& position) const;
     bool isItemAtPosition(const std::vector<Item>& items, const sf::Vector2i& position) const;

@@ -10,6 +10,13 @@ class Map;
 class MessageLog;
 class Player;
 
+enum class EnemyType
+{
+    Goblin,
+    Skeleton,
+    Orc
+};
+
 enum class EnemyState
 {
     Wander,
@@ -20,6 +27,7 @@ class Enemy : public Entity
 {
 public:
     explicit Enemy(const sf::Vector2i& gridPosition);
+    Enemy(EnemyType type, const sf::Vector2i& gridPosition);
 
     void updateAI(
         const Map& map,
@@ -30,11 +38,13 @@ public:
     );
 
     EnemyState getState() const;
+    EnemyType getType() const;
     const std::string& getName() const;
 
 private:
     static constexpr int SightRadius = 6;
 
+    EnemyType m_type;
     std::string m_name;
     EnemyState m_state;
     std::mt19937 m_randomEngine;

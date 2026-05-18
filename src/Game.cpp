@@ -384,7 +384,7 @@ std::vector<Enemy> Game::createEnemies(const sf::Vector2i& playerPosition) const
 
         if (randomInt(randomEngine, 0, 100) < 60)
         {
-            enemies.emplace_back(spawnPosition);
+            enemies.emplace_back(getRandomEnemyType(randomEngine), spawnPosition);
         }
     }
 
@@ -506,6 +506,23 @@ ItemType Game::getRandomItemType(std::mt19937& randomEngine) const
     }
 
     return ItemType::Armor;
+}
+
+EnemyType Game::getRandomEnemyType(std::mt19937& randomEngine) const
+{
+    const int roll = randomInt(randomEngine, 0, 100);
+
+    if (roll < 50)
+    {
+        return EnemyType::Goblin;
+    }
+
+    if (roll < 80)
+    {
+        return EnemyType::Skeleton;
+    }
+
+    return EnemyType::Orc;
 }
 
 bool Game::isEnemyAtPosition(const std::vector<Enemy>& enemies, const sf::Vector2i& position) const

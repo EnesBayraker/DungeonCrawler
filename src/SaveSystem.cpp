@@ -41,6 +41,36 @@ namespace
         }
     }
 
+    int enemyTypeToInt(EnemyType type)
+    {
+        switch (type)
+        {
+            case EnemyType::Goblin:
+                return 0;
+            case EnemyType::Skeleton:
+                return 1;
+            case EnemyType::Orc:
+                return 2;
+        }
+
+        return 0;
+    }
+
+    EnemyType intToEnemyType(int value)
+    {
+        switch (value)
+        {
+            case 0:
+                return EnemyType::Goblin;
+            case 1:
+                return EnemyType::Skeleton;
+            case 2:
+                return EnemyType::Orc;
+            default:
+                return EnemyType::Goblin;
+        }
+    }
+
     char tileToChar(TileType tile)
     {
         switch (tile)
@@ -85,7 +115,7 @@ bool SaveSystem::saveGame(
     const sf::Vector2i playerPosition = player.getGridPosition();
     const sf::Vector2i stairsPosition = map.getStairsPosition();
 
-    file << "SAVE_VERSION 1\n";
+    file << "SAVE_VERSION 2\n";
 
     file << "PLAYER "
          << playerPosition.x << ' '
@@ -150,9 +180,10 @@ bool SaveSystem::saveGame(
     {
         const sf::Vector2i enemyPosition = enemy.getGridPosition();
 
-        file << enemyPosition.x << ' '
-             << enemyPosition.y << ' '
-             << enemy.getHp() << '\n';
+        file << enemyTypeToInt(enemy.getType()) << ' '
+            << enemyPosition.x << ' '
+            << enemyPosition.y << ' '
+            << enemy.getHp() << '\n';
     }
 
     messageLog.add("Game saved to " + filePath + ".");
@@ -181,7 +212,7 @@ bool SaveSystem::loadGame(
 
     file >> label >> version;
 
-    if (label != "SAVE_VERSION" || version != 1)
+    if (label != "SAVE_VERSION" || version != 2)
     {
         messageLog.add("Load failed: invalid save version.");
         return false;
@@ -334,14 +365,23 @@ bool SaveSystem::loadGame(
 
     for (std::size_t i = 0; i < enemyCount; ++i)
     {
+        int enemyTypeValue = 0;
         int enemyX = 0;
         int enemyY = 0;
         int enemyHp = 0;
 
-        file >> enemyX >> enemyY >> enemyHp;
+        file >> enemyTypeValue >> enemyX >> enemyY >> enemyHp;
 
-        enemies.emplace_back(sf::Vector2i{enemyX, enemyY});
-        enemies.back().setCombatStats(enemyHp, 10, 3);
+        enemies.emplace_back(
+            intToEnemyType(enemyTypeValue),
+            sf::Vector2i{enemyX, enemyY}
+        );
+
+        enemies.back().setCombatStats(
+            enemyHp,
+            enemies.back().getMaxHp(),
+            enemies.back().getDamage()
+        );
     }
 
     messageLog.add("Game loaded from " + filePath + ".");
