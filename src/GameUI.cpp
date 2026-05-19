@@ -34,7 +34,7 @@ bool GameUI::loadFont()
     return false;
 }
 
-void GameUI::draw(sf::RenderWindow& window, const Player& player, const MessageLog& messageLog) const
+void GameUI::draw(sf::RenderWindow& window, const Player& player, const MessageLog& messageLog, int floorNumber) const
 {
     constexpr float PanelHeight = 144.f;
 
@@ -55,14 +55,15 @@ void GameUI::draw(sf::RenderWindow& window, const Player& player, const MessageL
     }
 
     sf::Text hpText(
-        m_font,
-        "HP: " + std::to_string(player.getHp()) +
-  "/" + std::to_string(player.getMaxHp()) +
-  " | Attack: " + std::to_string(player.getDamage()) +
-  " | Inventory: " + std::to_string(player.getInventory().size()) +
-  " item(s) | I: Inventory | F5: Save",
-        20
-    );
+    m_font,
+    "Depth: " + std::to_string(floorNumber) +
+    " | HP: " + std::to_string(player.getHp()) +
+    "/" + std::to_string(player.getMaxHp()) +
+    " | Attack: " + std::to_string(player.getDamage()) +
+    " | Inventory: " + std::to_string(player.getInventory().size()) +
+    " item(s) | I: Inventory | F5: Save",
+    20
+);
 
     hpText.setFillColor(sf::Color::White);
     hpText.setPosition({16.f, panelY + 10.f});
@@ -220,6 +221,51 @@ void GameUI::drawGameOver(sf::RenderWindow& window, const Player& player) const
     sf::Text exitText(m_font, "Escape - Exit", 22);
     exitText.setFillColor(sf::Color(190, 190, 190));
     exitText.setPosition({245.f, 395.f});
+
+    window.draw(exitText);
+}
+
+void GameUI::drawVictory(sf::RenderWindow& window, const Player& player) const
+{
+    if (!m_fontLoaded)
+    {
+        return;
+    }
+
+    sf::RectangleShape overlay({800.f, 720.f});
+    overlay.setPosition({0.f, 0.f});
+    overlay.setFillColor(sf::Color(0, 0, 0, 190));
+
+    window.draw(overlay);
+
+    sf::Text titleText(m_font, "VICTORY!", 56);
+    titleText.setFillColor(sf::Color(80, 220, 120));
+    titleText.setPosition({270.f, 210.f});
+
+    window.draw(titleText);
+
+    sf::Text statsText(
+        m_font,
+        "You escaped the dungeon with " +
+        std::to_string(player.getHp()) + "/" +
+        std::to_string(player.getMaxHp()) + " HP.",
+        22
+    );
+
+    statsText.setFillColor(sf::Color(230, 230, 230));
+    statsText.setPosition({210.f, 300.f});
+
+    window.draw(statsText);
+
+    sf::Text menuText(m_font, "Enter - Return to Main Menu", 24);
+    menuText.setFillColor(sf::Color::White);
+    menuText.setPosition({245.f, 365.f});
+
+    window.draw(menuText);
+
+    sf::Text exitText(m_font, "Escape - Exit", 22);
+    exitText.setFillColor(sf::Color(190, 190, 190));
+    exitText.setPosition({245.f, 405.f});
 
     window.draw(exitText);
 }

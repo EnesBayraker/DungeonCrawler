@@ -18,7 +18,8 @@ enum class GameState
 {
     MainMenu,
     Playing,
-    GameOver
+    GameOver,
+    Victory
 };
 
 class Game
@@ -39,6 +40,9 @@ private:
     std::vector<Enemy> m_enemies;
     std::vector<Item> m_items;
 
+    static constexpr int MaxFloor = 5;
+    int m_floorNumber;
+
     GameState m_gameState;
     bool m_inventoryOpen;
     std::string m_menuStatus;
@@ -52,6 +56,7 @@ private:
     bool handleInventoryEvent(const sf::Event& event);
     bool handlePlayingEvent(const sf::Event& event);
 
+    void handleVictoryEvent(const sf::Event& event);
     void startNewGame();
     void startNextFloor();
 

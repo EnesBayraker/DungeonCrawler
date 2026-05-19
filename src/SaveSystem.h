@@ -18,6 +18,7 @@ public:
         const Player& player,
         const std::vector<Enemy>& enemies,
         const std::vector<Item>& items,
+        int floorNumber,
         MessageLog& messageLog
     );
 
@@ -27,6 +28,7 @@ public:
         Player& player,
         std::vector<Enemy>& enemies,
         std::vector<Item>& items,
+        int& floorNumber,
         MessageLog& messageLog
     );
 };

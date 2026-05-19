@@ -9,6 +9,7 @@ Game::Game()
     : m_window(sf::VideoMode({800, 720}), "Roguelike Dungeon Crawler"),
       m_gameState(GameState::MainMenu),
       m_inventoryOpen(false),
+      m_floorNumber(1),
       m_menuStatus("Enter: new game | L: load save | Escape: exit")
 {
     m_window.setFramerateLimit(60);
@@ -21,7 +22,11 @@ void Game::run()
     {
         processEvents();
 
-        if (m_gameState == GameState::Playing || m_gameState == GameState::GameOver)
+        if (
+     m_gameState == GameState::Playing ||
+     m_gameState == GameState::GameOver ||
+     m_gameState == GameState::Victory
+ )
         {
             m_map.computeFov(m_player.getGridPosition(), 6);
         }
@@ -50,6 +55,12 @@ void Game::processEvents()
         if (m_gameState == GameState::GameOver)
         {
             handleGameOverEvent(*event);
+            continue;
+        }
+
+        if (m_gameState == GameState::Victory)
+        {
+            handleVictoryEvent(*event);
             continue;
         }
 
@@ -137,7 +148,7 @@ void Game::render()
     }
 
     m_player.draw(m_window);
-    m_gameUI.draw(m_window, m_player, m_messageLog);
+    m_gameUI.draw(m_window, m_player, m_messageLog, m_floorNumber);
 
     if (m_inventoryOpen)
     {
@@ -147,6 +158,11 @@ void Game::render()
     if (m_gameState == GameState::GameOver)
     {
         m_gameUI.drawGameOver(m_window, m_player);
+    }
+
+    if (m_gameState == GameState::Victory)
+    {
+        m_gameUI.drawVictory(m_window, m_player);
     }
 
     m_window.display();
@@ -167,14 +183,15 @@ void Game::handleMainMenuEvent(const sf::Event& event)
         m_messageLog = MessageLog();
 
         if (
-            SaveSystem::loadGame(
-                "savegame.txt",
-                m_map,
-                m_player,
-                m_enemies,
-                m_items,
-                m_messageLog
-            )
+        SaveSystem::loadGame(
+"savegame.txt",
+m_map,
+m_player,
+m_enemies,
+m_items,
+m_floorNumber,
+m_messageLog
+)
         )
         {
             m_inventoryOpen = false;
@@ -210,6 +227,23 @@ void Game::handleGameOverEvent(const sf::Event& event)
     }
 }
 
+void Game::handleVictoryEvent(const sf::Event& event)
+{
+    if (isReturnToMenuKey(event))
+    {
+        m_inventoryOpen = false;
+        m_menuStatus = "Enter: new game | L: load save | Escape: exit";
+        m_gameState = GameState::MainMenu;
+        return;
+    }
+
+    if (isExitKey(event))
+    {
+        m_window.close();
+    }
+}
+
+
 bool Game::handleInventoryEvent(const sf::Event& event)
 {
     if (isInventoryCloseKey(event))
@@ -238,13 +272,14 @@ bool Game::handlePlayingEvent(const sf::Event& event)
     if (isSaveKey(event))
     {
         SaveSystem::saveGame(
-            "savegame.txt",
-            m_map,
-            m_player,
-            m_enemies,
-            m_items,
-            m_messageLog
-        );
+    "savegame.txt",
+    m_map,
+    m_player,
+    m_enemies,
+    m_items,
+    m_floorNumber,
+    m_messageLog
+);
 
         return false;
     }
@@ -268,6 +303,8 @@ bool Game::handlePlayingEvent(const sf::Event& event)
 
 void Game::startNewGame()
 {
+
+    m_floorNumber = 1;
     m_map.generateNewFloor();
 
     m_player.setCombatStats(30, 30, 5);
@@ -283,6 +320,16 @@ void Game::startNewGame()
 
 void Game::startNextFloor()
 {
+    if (m_floorNumber >= MaxFloor)
+    {
+        m_inventoryOpen = false;
+        m_messageLog.add("You cleared the final floor.");
+        m_gameState = GameState::Victory;
+        return;
+    }
+
+    ++m_floorNumber;
+
     m_map.generateNewFloor();
 
     m_player.setGridPosition(m_map.getPlayerStart());
@@ -290,7 +337,10 @@ void Game::startNextFloor()
     m_enemies = createEnemies(m_player.getGridPosition());
     m_items = createItems(m_player.getGridPosition(), m_enemies);
 
-    m_messageLog.add("You descend to a deeper floor.");
+    m_messageLog.add(
+        "You descend to floor " +
+        std::to_string(m_floorNumber) + "."
+    );
 }
 
 void Game::tryPickupItem()

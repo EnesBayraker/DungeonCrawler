@@ -101,6 +101,7 @@ bool SaveSystem::saveGame(
     const Player& player,
     const std::vector<Enemy>& enemies,
     const std::vector<Item>& items,
+    int floorNumber,
     MessageLog& messageLog
 )
 {
@@ -115,7 +116,8 @@ bool SaveSystem::saveGame(
     const sf::Vector2i playerPosition = player.getGridPosition();
     const sf::Vector2i stairsPosition = map.getStairsPosition();
 
-    file << "SAVE_VERSION 2\n";
+    file << "SAVE_VERSION 3\n";
+    file << "FLOOR " << floorNumber << '\n';
 
     file << "PLAYER "
          << playerPosition.x << ' '
@@ -196,6 +198,7 @@ bool SaveSystem::loadGame(
     Player& player,
     std::vector<Enemy>& enemies,
     std::vector<Item>& items,
+    int& floorNumber,
     MessageLog& messageLog
 )
 {
@@ -212,10 +215,23 @@ bool SaveSystem::loadGame(
 
     file >> label >> version;
 
-    if (label != "SAVE_VERSION" || version != 2)
+    if (label != "SAVE_VERSION" || version != 3)
     {
         messageLog.add("Load failed: invalid save version.");
         return false;
+    }
+
+    file >> label >> floorNumber;
+
+    if (label != "FLOOR")
+    {
+        messageLog.add("Load failed: floor data is missing.");
+        return false;
+    }
+
+    if (floorNumber < 1)
+    {
+        floorNumber = 1;
     }
 
     int playerX = 0;
