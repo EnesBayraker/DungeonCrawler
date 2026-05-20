@@ -29,6 +29,8 @@ public:
     explicit Enemy(const sf::Vector2i& gridPosition);
     Enemy(EnemyType type, const sf::Vector2i& gridPosition);
 
+    void draw(sf::RenderWindow& window) const override;
+
     void updateAI(
         const Map& map,
         Player& player,

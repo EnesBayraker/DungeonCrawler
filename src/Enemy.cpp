@@ -86,6 +86,48 @@ Enemy::Enemy(EnemyType type, const sf::Vector2i& gridPosition)
 {
 }
 
+void Enemy::draw(sf::RenderWindow& window) const
+{
+    Entity::draw(window);
+
+    if (!isAlive())
+    {
+        return;
+    }
+
+    constexpr float BarWidth = 28.f;
+    constexpr float BarHeight = 4.f;
+
+    const float hpRatio =
+        static_cast<float>(m_hp) / static_cast<float>(m_maxHp);
+
+    const float barX = static_cast<float>(m_gridPosition.x * Map::TileSize + 2);
+    const float barY = static_cast<float>(m_gridPosition.y * Map::TileSize - 5);
+
+    sf::RectangleShape backgroundBar({BarWidth, BarHeight});
+    backgroundBar.setPosition({barX, barY});
+    backgroundBar.setFillColor(sf::Color(40, 40, 40));
+
+    sf::RectangleShape hpBar({BarWidth * hpRatio, BarHeight});
+    hpBar.setPosition({barX, barY});
+
+    if (hpRatio > 0.5f)
+    {
+        hpBar.setFillColor(sf::Color(80, 220, 80));
+    }
+    else if (hpRatio > 0.25f)
+    {
+        hpBar.setFillColor(sf::Color(230, 200, 60));
+    }
+    else
+    {
+        hpBar.setFillColor(sf::Color(220, 60, 60));
+    }
+
+    window.draw(backgroundBar);
+    window.draw(hpBar);
+}
+
 void Enemy::updateAI(
     const Map& map,
     Player& player,
