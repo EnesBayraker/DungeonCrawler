@@ -42,3 +42,9 @@ target_compile_features(DungeonCrawler PRIVATE cxx_std_17)
 target_link_libraries(DungeonCrawler PRIVATE
         SFML::Graphics
 )
+
+add_custom_command(TARGET DungeonCrawler POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:DungeonCrawler>/assets
+)

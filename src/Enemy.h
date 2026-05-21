@@ -51,6 +51,14 @@ private:
     EnemyState m_state;
     std::mt19937 m_randomEngine;
 
+    inline static sf::Texture s_goblinTexture;
+    inline static sf::Texture s_skeletonTexture;
+    inline static sf::Texture s_orcTexture;
+    inline static bool s_texturesLoaded = false;
+
+    static bool loadSharedTextures();
+    const sf::Texture* getTextureForType() const;
+
     sf::Vector2i chooseChaseDirection(const sf::Vector2i& playerPosition) const;
     sf::Vector2i chooseWanderDirection();
 

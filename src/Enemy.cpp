@@ -72,6 +72,50 @@ namespace
     }
 }
 
+bool Enemy::loadSharedTextures()
+{
+    if (s_texturesLoaded)
+    {
+        return true;
+    }
+
+    const bool goblinLoaded = s_goblinTexture.loadFromFile("assets/sprites/goblin.png");
+    const bool skeletonLoaded = s_skeletonTexture.loadFromFile("assets/sprites/skeleton.png");
+    const bool orcLoaded = s_orcTexture.loadFromFile("assets/sprites/orc.png");
+
+    if (goblinLoaded && skeletonLoaded && orcLoaded)
+    {
+        s_goblinTexture.setSmooth(false);
+        s_skeletonTexture.setSmooth(false);
+        s_orcTexture.setSmooth(false);
+
+        s_texturesLoaded = true;
+        return true;
+    }
+
+    return false;
+}
+
+const sf::Texture* Enemy::getTextureForType() const
+{
+    if (!s_texturesLoaded)
+    {
+        return nullptr;
+    }
+
+    switch (m_type)
+    {
+        case EnemyType::Goblin:
+            return &s_goblinTexture;
+        case EnemyType::Skeleton:
+            return &s_skeletonTexture;
+        case EnemyType::Orc:
+            return &s_orcTexture;
+    }
+
+    return nullptr;
+}
+
 Enemy::Enemy(const sf::Vector2i& gridPosition)
     : Enemy(EnemyType::Goblin, gridPosition)
 {
@@ -84,11 +128,29 @@ Enemy::Enemy(EnemyType type, const sf::Vector2i& gridPosition)
       m_state(EnemyState::Wander),
       m_randomEngine(std::random_device{}())
 {
+    loadSharedTextures();
 }
 
 void Enemy::draw(sf::RenderWindow& window) const
 {
-    Entity::draw(window);
+    const sf::Texture* texture = getTextureForType();
+
+    if (texture != nullptr)
+    {
+        sf::Sprite sprite(*texture);
+
+        sprite.setPosition({
+            static_cast<float>(m_gridPosition.x * Map::TileSize),
+            static_cast<float>(m_gridPosition.y * Map::TileSize)
+        });
+
+        window.draw(sprite);
+    }
+    else
+    {
+        // Sprite yüklenemezse fallback olarak kare çizim kalsın.
+        Entity::draw(window);
+    }
 
     if (!isAlive())
     {
