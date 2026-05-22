@@ -11,12 +11,12 @@ namespace
             case ItemType::Potion:
                 return "Health Potion";
             case ItemType::Weapon:
-                return "Iron Sword";
+                return "Sword";
             case ItemType::Armor:
-                return "Leather Armor";
+                return "Armor";
         }
 
-        return "Unknown Item";
+        return "Item";
     }
 
     sf::Color getItemColor(ItemType type)
@@ -24,37 +24,100 @@ namespace
         switch (type)
         {
             case ItemType::Potion:
-                return sf::Color(80, 220, 100);
+                return sf::Color(200, 50, 70);
             case ItemType::Weapon:
-                return sf::Color(220, 200, 60);
+                return sf::Color(180, 180, 190);
             case ItemType::Armor:
-                return sf::Color(80, 170, 220);
+                return sf::Color(90, 120, 210);
         }
 
         return sf::Color::White;
     }
 }
 
+bool Item::loadSharedTextures()
+{
+    if (s_texturesLoaded)
+    {
+        return true;
+    }
+
+    const bool potionLoaded = s_potionTexture.loadFromFile("assets/items/potion.png");
+    const bool weaponLoaded = s_weaponTexture.loadFromFile("assets/items/weapon.png");
+    const bool armorLoaded = s_armorTexture.loadFromFile("assets/items/armor.png");
+
+    if (potionLoaded && weaponLoaded && armorLoaded)
+    {
+        s_potionTexture.setSmooth(false);
+        s_weaponTexture.setSmooth(false);
+        s_armorTexture.setSmooth(false);
+
+        s_texturesLoaded = true;
+        return true;
+    }
+
+    return false;
+}
+
+const sf::Texture* Item::getTextureForType() const
+{
+    if (!s_texturesLoaded)
+    {
+        return nullptr;
+    }
+
+    switch (m_type)
+    {
+        case ItemType::Potion:
+            return &s_potionTexture;
+        case ItemType::Weapon:
+            return &s_weaponTexture;
+        case ItemType::Armor:
+            return &s_armorTexture;
+    }
+
+    return nullptr;
+}
+
 Item::Item(ItemType type, const sf::Vector2i& gridPosition)
     : m_type(type),
       m_name(getItemName(type)),
-      m_gridPosition(gridPosition),
-      m_color(getItemColor(type))
+      m_gridPosition(gridPosition)
 {
+    loadSharedTextures();
+
+    m_shape.setSize({20.f, 20.f});
+    m_shape.setFillColor(getItemColor(type));
+    m_shape.setPosition({
+        static_cast<float>(gridPosition.x * Map::TileSize + 6),
+        static_cast<float>(gridPosition.y * Map::TileSize + 6)
+    });
 }
 
 void Item::draw(sf::RenderWindow& window) const
 {
-    // Itemler oyuncu ve düşmandan daha küçük
-    sf::RectangleShape shape({18.f, 18.f});
-    shape.setFillColor(m_color);
+    const sf::Texture* texture = getTextureForType();
 
-    shape.setPosition({
-        static_cast<float>(m_gridPosition.x * Map::TileSize + 7),
-        static_cast<float>(m_gridPosition.y * Map::TileSize + 7)
-    });
+    if (texture != nullptr)
+    {
+        sf::Sprite sprite(*texture);
 
-    window.draw(shape);
+        sprite.setPosition({
+            static_cast<float>(m_gridPosition.x * Map::TileSize),
+            static_cast<float>(m_gridPosition.y * Map::TileSize)
+        });
+
+        window.draw(sprite);
+        return;
+    }
+
+    // Texture yüklenemezse renkli kare fallback.
+    window.draw(m_shape);
+}
+
+sf::Vector2i Item::getGridPosition() const
+{
+    return m_gridPosition;
 }
 
 ItemType Item::getType() const
@@ -65,9 +128,4 @@ ItemType Item::getType() const
 const std::string& Item::getName() const
 {
     return m_name;
-}
-
-sf::Vector2i Item::getGridPosition() const
-{
-    return m_gridPosition;
 }

@@ -65,6 +65,21 @@ private:
     sf::Vector2i m_stairsPosition;
     std::mt19937 m_randomEngine;
 
+    inline static sf::Texture s_floorTexture;
+    inline static sf::Texture s_wallTexture;
+    inline static sf::Texture s_stairsTexture;
+    inline static bool s_texturesLoaded = false;
+
+    static bool loadSharedTextures();
+
+    void drawTileSprite(
+        sf::RenderWindow& window,
+        const sf::Texture& texture,
+        int x,
+        int y,
+        const sf::Color& tint
+    ) const;
+
     void generateBspMap();
     void splitArea(const Area& area, int depth);
     void createRoomInArea(const Area& area);

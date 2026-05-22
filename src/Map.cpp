@@ -13,10 +13,65 @@ sf::Vector2i Room::getCenter() const
 
 Map::Map()
     : m_playerStart(1, 1),
-    m_stairsPosition(1, 1),
+      m_stairsPosition(1, 1),
       m_randomEngine(std::random_device{}())
 {
+    loadSharedTextures();
     generateBspMap();
+}
+
+bool Map::loadSharedTextures()
+{
+    if (s_texturesLoaded)
+    {
+        return true;
+    }
+
+    const bool floorLoaded = s_floorTexture.loadFromFile("assets/tiles/floor.png");
+    const bool wallLoaded = s_wallTexture.loadFromFile("assets/tiles/wall.png");
+    const bool stairsLoaded = s_stairsTexture.loadFromFile("assets/tiles/stairs.png");
+
+    if (floorLoaded && wallLoaded && stairsLoaded)
+    {
+        s_floorTexture.setSmooth(false);
+        s_wallTexture.setSmooth(false);
+        s_stairsTexture.setSmooth(false);
+
+        s_texturesLoaded = true;
+        return true;
+    }
+
+    return false;
+}
+
+void Map::drawTileSprite(
+    sf::RenderWindow& window,
+    const sf::Texture& texture,
+    int x,
+    int y,
+    const sf::Color& tint
+) const
+{
+    sf::Sprite sprite(texture);
+
+    const sf::Vector2u textureSize = texture.getSize();
+
+    if (textureSize.x > 0 && textureSize.y > 0)
+    {
+        sprite.setScale({
+            static_cast<float>(TileSize) / static_cast<float>(textureSize.x),
+            static_cast<float>(TileSize) / static_cast<float>(textureSize.y)
+        });
+    }
+
+    sprite.setPosition({
+        static_cast<float>(x * TileSize),
+        static_cast<float>(y * TileSize)
+    });
+
+    sprite.setColor(tint);
+
+    window.draw(sprite);
 }
 
 void Map::generateNewFloor()
@@ -456,36 +511,81 @@ const std::vector<Room>& Map::getRooms() const
 
 void Map::draw(sf::RenderWindow& window) const
 {
-    sf::RectangleShape tileShape(
-        sf::Vector2f(static_cast<float>(TileSize), static_cast<float>(TileSize))
-    );
+    sf::RectangleShape tileShape({
+        static_cast<float>(TileSize),
+        static_cast<float>(TileSize)
+    });
 
-    tileShape.setOutlineThickness(1.f);
+    tileShape.setOutlineThickness(-1.f);
 
     for (int y = 0; y < Height; ++y)
     {
         for (int x = 0; x < Width; ++x)
         {
+            const bool visible = m_visible[y][x];
+            const bool explored = m_explored[y][x];
+            const bool isStairs = (x == m_stairsPosition.x && y == m_stairsPosition.y);
+
+            // Hiç görülmeyen yer tamamen siyah.
+            if (!explored)
+            {
+                tileShape.setPosition({
+                    static_cast<float>(x * TileSize),
+                    static_cast<float>(y * TileSize)
+                });
+
+                tileShape.setFillColor(sf::Color::Black);
+                tileShape.setOutlineColor(sf::Color::Black);
+
+                window.draw(tileShape);
+                continue;
+            }
+
+            // Texture'lar yüklüyse sprite ile çiz.
+            if (s_texturesLoaded)
+            {
+                const sf::Texture& texture =
+                    isStairs
+                        ? s_stairsTexture
+                        : (m_tiles[y][x] == TileType::Wall ? s_wallTexture : s_floorTexture);
+
+                if (visible)
+                {
+                    drawTileSprite(window, texture, x, y, sf::Color::White);
+                }
+                else
+                {
+                    // Daha önce görülmüş ama şu an görünmeyen alanları koyulaştır.
+                    drawTileSprite(window, texture, x, y, sf::Color(110, 110, 110));
+
+                    sf::RectangleShape overlay({
+                        static_cast<float>(TileSize),
+                        static_cast<float>(TileSize)
+                    });
+
+                    overlay.setPosition({
+                        static_cast<float>(x * TileSize),
+                        static_cast<float>(y * TileSize)
+                    });
+
+                    overlay.setFillColor(sf::Color(0, 0, 0, 90));
+                    window.draw(overlay);
+                }
+
+                continue;
+            }
+
+            // Fallback: texture yüklenemezse eski renkli tile çizimi.
             tileShape.setPosition({
                 static_cast<float>(x * TileSize),
                 static_cast<float>(y * TileSize)
             });
 
-            const bool visible = m_visible[y][x];
-            const bool explored = m_explored[y][x];
-
-            if (!explored)
+            if (!visible)
             {
-                // Hiç görülmemiş alan tamamen karanlık.
-                tileShape.setFillColor(sf::Color::Black);
-                tileShape.setOutlineColor(sf::Color::Black);
-            }
-            else if (!visible)
-            {
-                // Daha önce görülmüş ama şu an görüş dışında olan alan.
                 tileShape.setOutlineColor(sf::Color(10, 10, 10));
 
-                if (x == m_stairsPosition.x && y == m_stairsPosition.y)
+                if (isStairs)
                 {
                     tileShape.setFillColor(sf::Color(45, 35, 65));
                 }
@@ -500,10 +600,9 @@ void Map::draw(sf::RenderWindow& window) const
             }
             else
             {
-                // Şu an aktif olarak görülen alan.
                 tileShape.setOutlineColor(sf::Color(45, 45, 45));
 
-                if (x == m_stairsPosition.x && y == m_stairsPosition.y)
+                if (isStairs)
                 {
                     tileShape.setFillColor(sf::Color(130, 90, 190));
                 }
