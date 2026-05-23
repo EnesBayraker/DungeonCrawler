@@ -17,6 +17,7 @@
 enum class GameState
 {
     MainMenu,
+    Help,
     Playing,
     GameOver,
     Victory
@@ -55,6 +56,7 @@ private:
     void handleGameOverEvent(const sf::Event& event);
     bool handleInventoryEvent(const sf::Event& event);
     bool handlePlayingEvent(const sf::Event& event);
+    void handleHelpEvent(const sf::Event& event);
 
     void handleVictoryEvent(const sf::Event& event);
     void startNewGame();
@@ -86,6 +88,7 @@ private:
     bool isLoadGameKey(const sf::Event& event) const;
     bool isExitKey(const sf::Event& event) const;
     bool isReturnToMenuKey(const sf::Event& event) const;
+    bool isHelpKey(const sf::Event& event) const;
 
     int getInventorySelectionIndex(const sf::Event& event) const;
 };

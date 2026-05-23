@@ -167,9 +167,15 @@ void GameUI::drawMainMenu(sf::RenderWindow& window, const std::string& statusMes
 
     window.draw(loadText);
 
+    sf::Text helpText(m_font, "H - How to Play", 24);
+    helpText.setFillColor(sf::Color(220, 220, 220));
+    helpText.setPosition({245.f, 330.f});
+
+    window.draw(helpText);
+
     sf::Text exitText(m_font, "Escape - Exit", 24);
     exitText.setFillColor(sf::Color(220, 220, 220));
-    exitText.setPosition({245.f, 330.f});
+    exitText.setPosition({245.f, 370.f});
 
     window.draw(exitText);
 
@@ -268,4 +274,66 @@ void GameUI::drawVictory(sf::RenderWindow& window, const Player& player) const
     exitText.setPosition({245.f, 405.f});
 
     window.draw(exitText);
+}
+
+void GameUI::drawHelpScreen(sf::RenderWindow& window) const
+{
+    if (!m_fontLoaded)
+    {
+        return;
+    }
+
+    sf::Text titleText(m_font, "How to Play", 42);
+    titleText.setFillColor(sf::Color::White);
+    titleText.setPosition({285.f, 80.f});
+
+    window.draw(titleText);
+
+    const std::vector<std::string> lines{
+        "Movement:",
+        "  W A S D / Arrow Keys - Move or attack",
+        "",
+        "Combat:",
+        "  Move into an enemy to attack it",
+        "  Enemies take a turn after your action",
+        "  Walking into a wall also consumes a turn",
+        "",
+        "Inventory:",
+        "  I - Open / close inventory",
+        "  1-9 - Use selected inventory item",
+        "",
+        "Items:",
+        "  Potion - Restore HP",
+        "  Sword - Increase attack damage",
+        "  Armor - Increase max HP",
+        "",
+        "Other:",
+        "  F5 - Save game",
+        "  L - Load game from main menu",
+        "  Reach Depth 5 and use the stairs to win",
+        "",
+        "Press Enter or Escape to return"
+    };
+
+    float y = 150.f;
+
+    for (const std::string& line : lines)
+    {
+        sf::Text text(m_font, line, 19);
+
+        if (line == "Movement:" || line == "Combat:" || line == "Inventory:" ||
+            line == "Items:" || line == "Other:")
+        {
+            text.setFillColor(sf::Color(120, 200, 255));
+        }
+        else
+        {
+            text.setFillColor(sf::Color(220, 220, 220));
+        }
+
+        text.setPosition({150.f, y});
+        window.draw(text);
+
+        y += 26.f;
+    }
 }

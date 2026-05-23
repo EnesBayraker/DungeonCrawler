@@ -10,7 +10,7 @@ Game::Game()
       m_gameState(GameState::MainMenu),
       m_inventoryOpen(false),
       m_floorNumber(1),
-      m_menuStatus("Enter: new game | L: load save | Escape: exit")
+m_menuStatus("Enter: new game | L: load save | H: how to play | Escape: exit")
 {
     m_window.setFramerateLimit(60);
     m_window.setKeyRepeatEnabled(false);
@@ -49,6 +49,12 @@ void Game::processEvents()
         if (m_gameState == GameState::MainMenu)
         {
             handleMainMenuEvent(*event);
+            continue;
+        }
+
+        if (m_gameState == GameState::Help)
+        {
+            handleHelpEvent(*event);
             continue;
         }
 
@@ -121,6 +127,13 @@ void Game::render()
     if (m_gameState == GameState::MainMenu)
     {
         m_gameUI.drawMainMenu(m_window, m_menuStatus);
+        m_window.display();
+        return;
+    }
+
+    if (m_gameState == GameState::Help)
+    {
+        m_gameUI.drawHelpScreen(m_window);
         m_window.display();
         return;
     }
@@ -205,9 +218,24 @@ m_messageLog
         return;
     }
 
+    if (isHelpKey(event))
+    {
+        m_gameState = GameState::Help;
+        return;
+    }
+
     if (isExitKey(event))
     {
         m_window.close();
+    }
+}
+
+void Game::handleHelpEvent(const sf::Event& event)
+{
+    if (isReturnToMenuKey(event) || isExitKey(event))
+    {
+        m_menuStatus = "Enter: new game | L: load save | H: how to play | Escape: exit";
+        m_gameState = GameState::MainMenu;
     }
 }
 
@@ -216,7 +244,7 @@ void Game::handleGameOverEvent(const sf::Event& event)
     if (isReturnToMenuKey(event))
     {
         m_inventoryOpen = false;
-        m_menuStatus = "Enter: new game | L: load save | Escape: exit";
+        m_menuStatus = "Enter: new game | L: load save | H: how to play | Escape: exit";
         m_gameState = GameState::MainMenu;
         return;
     }
@@ -232,7 +260,7 @@ void Game::handleVictoryEvent(const sf::Event& event)
     if (isReturnToMenuKey(event))
     {
         m_inventoryOpen = false;
-        m_menuStatus = "Enter: new game | L: load save | Escape: exit";
+        m_menuStatus = "Enter: new game | L: load save | H: how to play | Escape: exit";
         m_gameState = GameState::MainMenu;
         return;
     }
@@ -622,6 +650,18 @@ bool Game::isInventoryToggleKey(const sf::Event& event) const
     }
 
     return keyPressed->scancode == sf::Keyboard::Scancode::I;
+}
+
+bool Game::isHelpKey(const sf::Event& event) const
+{
+    const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+
+    if (keyPressed == nullptr)
+    {
+        return false;
+    }
+
+    return keyPressed->scancode == sf::Keyboard::Scancode::H;
 }
 
 bool Game::isInventoryCloseKey(const sf::Event& event) const
