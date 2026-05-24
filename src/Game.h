@@ -63,7 +63,7 @@ private:
     void startNextFloor();
 
     void tryPickupItem();
-    void removeDeadEnemies();
+    void removeDeadEnemiesAndDropItems();
     void updateEnemies();
 
     std::vector<Enemy> createEnemies(const sf::Vector2i& playerPosition) const;

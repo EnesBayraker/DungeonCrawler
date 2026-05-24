@@ -109,9 +109,9 @@ void Game::updateAfterPlayerTurn(bool playerTookTurn)
         return;
     }
 
-    removeDeadEnemies();
+    removeDeadEnemiesAndDropItems();
     updateEnemies();
-    removeDeadEnemies();
+    removeDeadEnemiesAndDropItems();
 
     if (!m_player.isAlive())
     {
@@ -395,19 +395,39 @@ void Game::tryPickupItem()
     m_items.erase(itemIt);
 }
 
-void Game::removeDeadEnemies()
+void Game::removeDeadEnemiesAndDropItems()
 {
-    m_enemies.erase(
-        std::remove_if(
-            m_enemies.begin(),
-            m_enemies.end(),
-            [](const Enemy& enemy)
-            {
-                return !enemy.isAlive();
-            }
-        ),
-        m_enemies.end()
-    );
+    std::mt19937 randomEngine(std::random_device{}());
+
+    auto enemyIt = m_enemies.begin();
+
+    while (enemyIt != m_enemies.end())
+    {
+        if (enemyIt->isAlive())
+        {
+            ++enemyIt;
+            continue;
+        }
+
+        const sf::Vector2i dropPosition = enemyIt->getGridPosition();
+
+        // %20 ihtimalle düşman öldüğü yerde item düşürür.
+        if (
+            randomInt(randomEngine, 0, 100) < 20 &&
+            !isItemAtPosition(m_items, dropPosition)
+        )
+        {
+            const ItemType droppedType = getRandomItemType(randomEngine);
+            m_items.emplace_back(droppedType, dropPosition);
+
+            m_messageLog.add(
+                enemyIt->getName() + " dropped " +
+                m_items.back().getName() + "."
+            );
+        }
+
+        enemyIt = m_enemies.erase(enemyIt);
+    }
 }
 
 void Game::updateEnemies()
