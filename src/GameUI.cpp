@@ -10,8 +10,15 @@
 #include "Player.h"
 
 GameUI::GameUI()
-    : m_fontLoaded(loadFont())
+    : m_fontLoaded(loadFont()),
+      m_menuBackgroundLoaded(false)
 {
+    m_menuBackgroundLoaded = m_menuBackgroundTexture.loadFromFile("assets/ui/menu_background.png");
+
+    if (m_menuBackgroundLoaded)
+    {
+        m_menuBackgroundTexture.setSmooth(true);
+    }
 }
 
 bool GameUI::loadFont()
@@ -149,40 +156,82 @@ void GameUI::drawMainMenu(sf::RenderWindow& window, const std::string& statusMes
         return;
     }
 
-    sf::Text titleText(m_font, "Roguelike Dungeon Crawler", 38);
-    titleText.setFillColor(sf::Color::White);
-    titleText.setPosition({155.f, 150.f});
+    if (m_menuBackgroundLoaded)
+    {
+        sf::Sprite backgroundSprite(m_menuBackgroundTexture);
 
+        const sf::Vector2u textureSize = m_menuBackgroundTexture.getSize();
+
+        if (textureSize.x > 0 && textureSize.y > 0)
+        {
+            backgroundSprite.setScale({
+                800.f / static_cast<float>(textureSize.x),
+                720.f / static_cast<float>(textureSize.y)
+            });
+        }
+
+        backgroundSprite.setPosition({0.f, 0.f});
+        window.draw(backgroundSprite);
+
+        // Yazıların daha okunur olması için koyu overlay.
+        sf::RectangleShape darkOverlay({800.f, 720.f});
+        darkOverlay.setPosition({0.f, 0.f});
+        darkOverlay.setFillColor(sf::Color(0, 0, 0, 120));
+        window.draw(darkOverlay);
+    }
+    else
+    {
+        sf::RectangleShape background({800.f, 720.f});
+        background.setPosition({0.f, 0.f});
+        background.setFillColor(sf::Color(20, 20, 24));
+        window.draw(background);
+    }
+
+    sf::Text titleShadow(m_font, "Roguelike Dungeon Crawler", 42);
+    titleShadow.setFillColor(sf::Color(0, 0, 0, 200));
+    titleShadow.setPosition({166.f, 116.f});
+    window.draw(titleShadow);
+
+    sf::Text titleText(m_font, "Roguelike Dungeon Crawler", 42);
+    titleText.setFillColor(sf::Color(235, 235, 235));
+    titleText.setPosition({162.f, 112.f});
     window.draw(titleText);
 
-    sf::Text startText(m_font, "Enter - Start New Game", 24);
-    startText.setFillColor(sf::Color(220, 220, 220));
-    startText.setPosition({245.f, 250.f});
+    sf::Text subtitleText(m_font, "Descend. Survive. Escape.", 22);
+    subtitleText.setFillColor(sf::Color(210, 210, 210));
+    subtitleText.setPosition({255.f, 165.f});
+    window.draw(subtitleText);
 
+    sf::RectangleShape menuPanel({360.f, 190.f});
+    menuPanel.setPosition({220.f, 255.f});
+    menuPanel.setFillColor(sf::Color(0, 0, 0, 120));
+    menuPanel.setOutlineThickness(2.f);
+    menuPanel.setOutlineColor(sf::Color(120, 120, 120, 160));
+    window.draw(menuPanel);
+
+    sf::Text startText(m_font, "Enter - Start New Game", 24);
+    startText.setFillColor(sf::Color(235, 235, 235));
+    startText.setPosition({245.f, 280.f});
     window.draw(startText);
 
     sf::Text loadText(m_font, "L - Load Game", 24);
     loadText.setFillColor(sf::Color(220, 220, 220));
-    loadText.setPosition({245.f, 290.f});
-
+    loadText.setPosition({245.f, 320.f});
     window.draw(loadText);
 
     sf::Text helpText(m_font, "H - How to Play", 24);
     helpText.setFillColor(sf::Color(220, 220, 220));
-    helpText.setPosition({245.f, 330.f});
-
+    helpText.setPosition({245.f, 360.f});
     window.draw(helpText);
 
     sf::Text exitText(m_font, "Escape - Exit", 24);
     exitText.setFillColor(sf::Color(220, 220, 220));
-    exitText.setPosition({245.f, 370.f});
-
+    exitText.setPosition({245.f, 400.f});
     window.draw(exitText);
 
     sf::Text statusText(m_font, statusMessage, 18);
-    statusText.setFillColor(sf::Color(180, 180, 180));
-    statusText.setPosition({180.f, 410.f});
-
+    statusText.setFillColor(sf::Color(230, 220, 170));
+    statusText.setPosition({120.f, 640.f});
     window.draw(statusText);
 }
 

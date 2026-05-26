@@ -22,5 +22,9 @@ private:
     sf::Font m_font;
     bool m_fontLoaded;
 
+
+    sf::Texture m_menuBackgroundTexture;
+    bool m_menuBackgroundLoaded;
+
     bool loadFont();
 };
