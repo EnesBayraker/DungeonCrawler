@@ -459,11 +459,13 @@ std::vector<Enemy> Game::createEnemies(const sf::Vector2i& playerPosition) const
     std::vector<Enemy> enemies;
     std::mt19937 randomEngine(std::random_device{}());
 
-    constexpr int MaxEnemyCount = 6;
+    // Kat derinliği arttıkça düşman sayısı ve spawn ihtimali artar.
+    const int maxEnemyCount = std::min(10, 4 + m_floorNumber * 2);
+    const int spawnChance = std::min(90, 50 + m_floorNumber * 8);
 
     for (const Room& room : m_map.getRooms())
     {
-        if (static_cast<int>(enemies.size()) >= MaxEnemyCount)
+        if (static_cast<int>(enemies.size()) >= maxEnemyCount)
         {
             break;
         }
@@ -480,7 +482,7 @@ std::vector<Enemy> Game::createEnemies(const sf::Vector2i& playerPosition) const
             continue;
         }
 
-        if (randomInt(randomEngine, 0, 100) < 60)
+        if (randomInt(randomEngine, 0, 100) < spawnChance)
         {
             enemies.emplace_back(getRandomEnemyType(randomEngine), spawnPosition);
         }
@@ -610,12 +612,45 @@ EnemyType Game::getRandomEnemyType(std::mt19937& randomEngine) const
 {
     const int roll = randomInt(randomEngine, 0, 100);
 
-    if (roll < 50)
+    // İlk katlarda Goblin daha yaygın.
+    if (m_floorNumber <= 1)
+    {
+        if (roll < 65)
+        {
+            return EnemyType::Goblin;
+        }
+
+        if (roll < 90)
+        {
+            return EnemyType::Skeleton;
+        }
+
+        return EnemyType::Orc;
+    }
+
+    // Orta katlarda Skeleton ve Orc ihtimali artar.
+    if (m_floorNumber <= 3)
+    {
+        if (roll < 45)
+        {
+            return EnemyType::Goblin;
+        }
+
+        if (roll < 80)
+        {
+            return EnemyType::Skeleton;
+        }
+
+        return EnemyType::Orc;
+    }
+
+    // Son katlarda daha tehlikeli düşmanlar daha sık çıkar.
+    if (roll < 25)
     {
         return EnemyType::Goblin;
     }
 
-    if (roll < 80)
+    if (roll < 65)
     {
         return EnemyType::Skeleton;
     }
