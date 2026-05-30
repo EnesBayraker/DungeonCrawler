@@ -10,10 +10,11 @@ Game::Game()
       m_gameState(GameState::MainMenu),
       m_inventoryOpen(false),
       m_floorNumber(1),
-m_menuStatus("Enter: new game | L: load save | H: how to play | Escape: exit")
+      m_menuStatus("Enter: new game | L: load save | H: how to play | Escape: exit")
 {
     m_window.setFramerateLimit(60);
     m_window.setKeyRepeatEnabled(false);
+    m_audioManager.playMenuMusic();
 }
 
 void Game::run()
@@ -196,17 +197,18 @@ void Game::handleMainMenuEvent(const sf::Event& event)
         m_messageLog = MessageLog();
 
         if (
-        SaveSystem::loadGame(
-"savegame.txt",
-m_map,
-m_player,
-m_enemies,
-m_items,
-m_floorNumber,
-m_messageLog
-)
+            SaveSystem::loadGame(
+                "savegame.txt",
+                m_map,
+                m_player,
+                m_enemies,
+                m_items,
+                m_floorNumber,
+                m_messageLog
+            )
         )
         {
+            m_audioManager.playDungeonMusic();
             m_inventoryOpen = false;
             m_gameState = GameState::Playing;
         }
@@ -245,6 +247,7 @@ void Game::handleGameOverEvent(const sf::Event& event)
     {
         m_inventoryOpen = false;
         m_menuStatus = "Enter: new game | L: load save | H: how to play | Escape: exit";
+        m_audioManager.playMenuMusic();
         m_gameState = GameState::MainMenu;
         return;
     }
@@ -333,6 +336,7 @@ void Game::startNewGame()
 {
 
     m_floorNumber = 1;
+    m_audioManager.playDungeonMusic();
     m_map.generateNewFloor();
 
     m_player.setCombatStats(30, 30, 5);

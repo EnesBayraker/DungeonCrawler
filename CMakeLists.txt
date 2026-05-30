@@ -35,12 +35,15 @@ add_executable(DungeonCrawler
         src/SaveSystem.cpp
         src/Game.h
         src/Game.cpp
+        src/AudioManager.h
+        src/AudioManager.cpp
 )
 
 target_compile_features(DungeonCrawler PRIVATE cxx_std_17)
 
 target_link_libraries(DungeonCrawler PRIVATE
         SFML::Graphics
+        SFML::Audio
 )
 
 add_custom_command(TARGET DungeonCrawler POST_BUILD

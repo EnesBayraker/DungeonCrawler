@@ -6,7 +6,7 @@
 #include <random>
 #include <string>
 #include <vector>
-
+#include "AudioManager.h"
 #include "Enemy.h"
 #include "GameUI.h"
 #include "Item.h"
@@ -43,7 +43,7 @@ private:
 
     static constexpr int MaxFloor = 5;
     int m_floorNumber;
-
+    AudioManager m_audioManager;
     GameState m_gameState;
     bool m_inventoryOpen;
     std::string m_menuStatus;
