@@ -6,7 +6,11 @@
 #include "SaveSystem.h"
 
 Game::Game()
-    : m_window(sf::VideoMode({800, 720}), "Roguelike Dungeon Crawler"),
+    : m_window(sf::VideoMode({InitialWindowWidth, InitialWindowHeight}), "Roguelike Dungeon Crawler"),
+      m_gameView(sf::FloatRect(
+          {0.f, 0.f},
+          {static_cast<float>(BaseWidth), static_cast<float>(BaseHeight)}
+      )),
       m_gameState(GameState::MainMenu),
       m_inventoryOpen(false),
       m_floorNumber(1),
@@ -14,6 +18,9 @@ Game::Game()
 {
     m_window.setFramerateLimit(60);
     m_window.setKeyRepeatEnabled(false);
+
+    updateView();
+
     m_audioManager.playMenuMusic();
 }
 
@@ -24,10 +31,11 @@ void Game::run()
         processEvents();
 
         if (
-     m_gameState == GameState::Playing ||
-     m_gameState == GameState::GameOver ||
-     m_gameState == GameState::Victory
- )
+    m_gameState == GameState::Playing ||
+    m_gameState == GameState::Paused ||
+    m_gameState == GameState::GameOver ||
+    m_gameState == GameState::Victory
+)
         {
             m_map.computeFov(m_player.getGridPosition(), 6);
         }
@@ -47,6 +55,11 @@ void Game::processEvents()
             m_window.close();
         }
 
+        if (event->getIf<sf::Event::Resized>() != nullptr)
+        {
+            updateView();
+        }
+
         if (m_gameState == GameState::MainMenu)
         {
             handleMainMenuEvent(*event);
@@ -56,6 +69,12 @@ void Game::processEvents()
         if (m_gameState == GameState::Help)
         {
             handleHelpEvent(*event);
+            continue;
+        }
+
+        if (m_gameState == GameState::Paused)
+        {
+            handlePausedEvent(*event);
             continue;
         }
 
@@ -169,6 +188,11 @@ void Game::render()
         m_gameUI.drawInventory(m_window, m_player);
     }
 
+    if (m_gameState == GameState::Paused)
+    {
+        m_gameUI.drawPauseScreen(m_window);
+    }
+
     if (m_gameState == GameState::GameOver)
     {
         m_gameUI.drawGameOver(m_window, m_player);
@@ -180,6 +204,47 @@ void Game::render()
     }
 
     m_window.display();
+}
+
+void Game::updateView()
+{
+    const sf::Vector2u windowSize = m_window.getSize();
+
+    if (windowSize.x == 0 || windowSize.y == 0)
+    {
+        return;
+    }
+
+    const float windowRatio =
+        static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y);
+
+    const float gameRatio =
+        static_cast<float>(BaseWidth) / static_cast<float>(BaseHeight);
+
+    float viewportWidth = 1.f;
+    float viewportHeight = 1.f;
+    float viewportLeft = 0.f;
+    float viewportTop = 0.f;
+
+    if (windowRatio > gameRatio)
+    {
+        // Pencere fazla genişse sağ-sol letterbox bırak.
+        viewportWidth = gameRatio / windowRatio;
+        viewportLeft = (1.f - viewportWidth) / 2.f;
+    }
+    else
+    {
+        // Pencere fazla uzunsa üst-alt letterbox bırak.
+        viewportHeight = windowRatio / gameRatio;
+        viewportTop = (1.f - viewportHeight) / 2.f;
+    }
+
+    m_gameView.setViewport(sf::FloatRect(
+        {viewportLeft, viewportTop},
+        {viewportWidth, viewportHeight}
+    ));
+
+    m_window.setView(m_gameView);
 }
 
 void Game::handleMainMenuEvent(const sf::Event& event)
@@ -238,6 +303,15 @@ void Game::handleHelpEvent(const sf::Event& event)
     {
         m_menuStatus = "Enter: new game | L: load save | H: how to play | Escape: exit";
         m_gameState = GameState::MainMenu;
+    }
+}
+
+void Game::handlePausedEvent(const sf::Event& event)
+{
+    if (isReturnToMenuKey(event) || isExitKey(event))
+    {
+        m_audioManager.resumeMusic();
+        m_gameState = GameState::Playing;
     }
 }
 
@@ -300,6 +374,14 @@ bool Game::handleInventoryEvent(const sf::Event& event)
 
 bool Game::handlePlayingEvent(const sf::Event& event)
 {
+    if (isExitKey(event))
+    {
+        m_inventoryOpen = false;
+        m_audioManager.pauseMusic();
+        m_gameState = GameState::Paused;
+        return false;
+    }
+
     if (isSaveKey(event))
     {
         SaveSystem::saveGame(

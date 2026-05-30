@@ -21,6 +21,22 @@ void AudioManager::stopMusic()
     m_currentTrack = MusicTrack::None;
 }
 
+void AudioManager::pauseMusic()
+{
+    if (m_currentTrack != MusicTrack::None)
+    {
+        m_music.pause();
+    }
+}
+
+void AudioManager::resumeMusic()
+{
+    if (m_currentTrack != MusicTrack::None)
+    {
+        m_music.play();
+    }
+}
+
 bool AudioManager::playMusicFile(const std::string& filePath, MusicTrack track, float volume)
 {
     if (m_currentTrack == track)

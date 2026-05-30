@@ -19,6 +19,8 @@ public:
     void playMenuMusic();
     void playDungeonMusic();
     void stopMusic();
+    void pauseMusic();
+    void resumeMusic();
 
 private:
     sf::Music m_music;

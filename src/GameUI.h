@@ -17,7 +17,7 @@ public:
     void drawMainMenu(sf::RenderWindow& window, const std::string& statusMessage) const;
     void drawGameOver(sf::RenderWindow& window, const Player& player) const;
     void drawVictory(sf::RenderWindow& window, const Player& player) const;
-
+    void drawPauseScreen(sf::RenderWindow& window) const;
 private:
     sf::Font m_font;
     bool m_fontLoaded;

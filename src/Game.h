@@ -19,6 +19,7 @@ enum class GameState
     MainMenu,
     Help,
     Playing,
+    Paused,
     GameOver,
     Victory
 };
@@ -31,7 +32,13 @@ public:
     void run();
 
 private:
+    static constexpr unsigned int BaseWidth = 800;
+    static constexpr unsigned int BaseHeight = 720;
+    static constexpr unsigned int InitialWindowWidth = 1000;
+    static constexpr unsigned int InitialWindowHeight = 900;
+
     sf::RenderWindow m_window;
+    sf::View m_gameView;
 
     Map m_map;
     Player m_player;
@@ -51,13 +58,14 @@ private:
     void processEvents();
     void updateAfterPlayerTurn(bool playerTookTurn);
     void render();
+    void updateView();
 
     void handleMainMenuEvent(const sf::Event& event);
     void handleGameOverEvent(const sf::Event& event);
     bool handleInventoryEvent(const sf::Event& event);
     bool handlePlayingEvent(const sf::Event& event);
     void handleHelpEvent(const sf::Event& event);
-
+    void handlePausedEvent(const sf::Event& event);
     void handleVictoryEvent(const sf::Event& event);
     void startNewGame();
     void startNextFloor();

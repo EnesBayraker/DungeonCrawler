@@ -386,3 +386,43 @@ void GameUI::drawHelpScreen(sf::RenderWindow& window) const
         y += 26.f;
     }
 }
+
+void GameUI::drawPauseScreen(sf::RenderWindow& window) const
+{
+    if (!m_fontLoaded)
+    {
+        return;
+    }
+
+    sf::RectangleShape overlay({800.f, 720.f});
+    overlay.setPosition({0.f, 0.f});
+    overlay.setFillColor(sf::Color(0, 0, 0, 170));
+
+    window.draw(overlay);
+
+    sf::RectangleShape panel({420.f, 220.f});
+    panel.setPosition({190.f, 240.f});
+    panel.setFillColor(sf::Color(15, 15, 18, 230));
+    panel.setOutlineThickness(2.f);
+    panel.setOutlineColor(sf::Color(160, 160, 160, 180));
+
+    window.draw(panel);
+
+    sf::Text titleText(m_font, "PAUSED", 44);
+    titleText.setFillColor(sf::Color::White);
+    titleText.setPosition({305.f, 270.f});
+
+    window.draw(titleText);
+
+    sf::Text resumeText(m_font, "Enter / Escape - Resume", 22);
+    resumeText.setFillColor(sf::Color(220, 220, 220));
+    resumeText.setPosition({270.f, 350.f});
+
+    window.draw(resumeText);
+
+    sf::Text hintText(m_font, "Music is paused while the game is paused.", 16);
+    hintText.setFillColor(sf::Color(170, 170, 170));
+    hintText.setPosition({245.f, 395.f});
+
+    window.draw(hintText);
+}
